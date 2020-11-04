@@ -1,0 +1,17 @@
+{
+  "name": "stocks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.0",
+    "fastify": "^3.7.0",
+    "mongoose": "^5.10.11",
+    "yargs": "^16.1.0"
+  }
+}

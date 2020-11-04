@@ -1,0 +1,3 @@
+docker build --no-cache -t sorinboia/arcadia-users:v0.1 users && docker push sorinboia/arcadia-users:v0.1
+docker build --no-cache -t sorinboia/arcadia-login:v0.1 login && docker push sorinboia/arcadia-login:v0.1
+docker build --no-cache -t sorinboia/arcadia-cash_transfer:v0.1 cash_transfer && docker push sorinboia/arcadia-cash_transfer:v0.1
