@@ -10,8 +10,12 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.21.0",
+    "bitfinex-api-node": "^4.0.16",
     "fastify": "^3.7.0",
+    "fastify-jwt": "^2.1.3",
+    "fastify-plugin": "^3.0.0",
     "mongoose": "^5.10.11",
+    "ws": "^7.4.0",
     "yargs": "^16.1.0"
   }
 }

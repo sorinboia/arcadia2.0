@@ -1,7 +1,7 @@
 const argv = require('yargs').argv;
 
 const arcadiaDB = argv.db || '10.100.102.13';
-
+const bitfinex = require('./bitfinex');
 
 const {webPort, usersApiHost, loginApiHost, cashtApiHost, stocktApiHost } = argv;
 
@@ -15,16 +15,52 @@ const Stock = require('./models/stock');
 
 fastify.route({
     method: 'GET',
-    url: `/${API_VERSION}/stock/:symbol`,
+    url: `/${API_VERSION}/stock/ticker/:symbol`,
+
     handler: async (request,reply) => {
-
         const { symbol } = request.params;
+        if (symbol == 'all') {
+            const data = {
+                btc: {
+                    ticker: bitfinex.btc.ticker
+                },
+                eth: {
+                    ticker: bitfinex.eth.ticker
+                },
+                ltc: {
+                    ticker: bitfinex.ltc.ticker
+                }
+            };
+            return data;
+        } else {
+            return bitfinex[symbol];
+        }
 
-        const result = await Stock.findOne({ symbol });
-        return result;
     }
 });
 
+fastify.route({
+    method: 'GET',
+    url: `/${API_VERSION}/stock/candles/:symbol`,
+
+    handler: async (request,reply) => {
+        const { symbol } = request.params;
+        if (symbol == 'all') {
+
+            const data = {
+                btc: bitfinex.btc.candles,
+                eth: bitfinex.eth.candles,
+                ltc: bitfinex.ltc.candles,
+            };
+            return data;
+        } else {
+            return bitfinex[symbol];
+        }
+
+    }
+});
+
+/*
 // Creating a new stock
 fastify.route({
     method: 'POST',
@@ -43,6 +79,8 @@ fastify.route({
         return { status: 'success'};
     }
 });
+*/
+
 
 const start = async () => {
     try {

@@ -9,17 +9,41 @@ const {webPort, usersApiHost, loginApiHost, cashtApiHost, stocktApiHost } = argv
 const fastify = require('fastify')({ logger: true });
 const mongoose = require('mongoose');
 
+
 const ARCADIA_DB = `mongodb://${arcadiaDB}/arcadia-db`;
 const API_VERSION = 'v1';
 const User = require('./models/user');
+
+
+const fp = require("fastify-plugin");
+
+fp(async function(opts) {
+    fastify.register(require("fastify-jwt"), {
+        secret: "top-secret-phrase"
+    });
+
+    fastify.decorate("authenticate", async function(request, reply) {
+        try {
+            await request.jwtVerify()
+        } catch (err) {
+            reply.send(err)
+        }
+    })
+}) ();
+
+
+
+
 
 //Getting user data from external sources
 fastify.route({
     method: 'GET',
     url: `/${API_VERSION}/user/:accountId`,
+    preValidation: [fastify.authenticate],
     handler: async (request,reply) => {
-        const result = await User.findOne({ accountId : request.params.accountId});
-        return result;
+        const  { accountId, email, name, cash, stocks } = await User.findOne({ accountId : request.params.accountId});
+
+        return { accountId, email, name, cash, stocks };
     }
 });
 
@@ -28,23 +52,49 @@ fastify.route({
     method: 'POST',
     url: `/${API_VERSION}/user`,
     handler: async (request,reply) => {
-        const { name, email, picture, cash, password } = request.body;
-
-        // Generating an account id
+        const { name, email, picture, cash, password,stocks } = request.body;
         const accountId = Math.floor(Math.random() * (99999999 - 10000000) + 10000000 );
-
+        // Generating an account id
         new User({
             accountId,
             name,
             email,
             picture,
             cash,
-            password
+            password,
+            stocks
         }).save ( function (err) {
             if (err) throw(err);
         });
 
         return { status: 'success'};
+
+    }
+});
+
+fastify.route({
+    method: 'PATCH',
+    url: `/${API_VERSION}/user`,
+    preValidation: [fastify.authenticate],
+    handler: async (request,reply) => {
+
+        const accountId = request.user.sub;
+        const { name, email, picture, cash, password,stocks } = request.body;
+        const user = await User.findOne({ accountId });
+        user.name = name || user.name;
+        user.email  = email || user.email;
+        user.picture  = picture || user.picture;
+        user.cash  = cash || user.cash;
+        user.password  = password || user.password;
+        user.stocks  = stocks || user.stocks;
+
+        user.save ( function (err) {
+            if (err) throw(err);
+        });
+
+        return { status: 'success'};
+
+
     }
 });
 

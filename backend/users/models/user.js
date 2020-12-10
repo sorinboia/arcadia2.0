@@ -3,10 +3,7 @@ const userSchema = new mongoose.Schema({
     accountId: String,
     name: String,
     email: String,
-    picture: {
-        data: Buffer,
-        contentType: String
-    },
+    picture: String,
     cash: Number,
     stocks: Object,
     password: String

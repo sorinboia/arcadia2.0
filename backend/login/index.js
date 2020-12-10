@@ -25,18 +25,27 @@ fastify.route({
         const b64_email = (new Buffer(email)).toString('base64');
         const result = await axios.get(`${USER_API}/user_i/${b64_email}`);
 
+        if (!result.data) return { status: 'fail' };
+
+        const  { accountId, name, cash, stocks, picture } = result.data;
+
         if (password == result.data.password) {
 
-            const claims = { iss: 'fun-with-jwts', sub: 'AzureDiamond' };
+            const claims = { iss: 'arcadia-jwt', sub: accountId };
             const token = jwt.create(claims, 'top-secret-phrase');
-            token.setExpiration(new Date().getTime() + 60*1000);
+            token.setExpiration(new Date().getTime() + 6000 *9000000);
 
             return {
                 status: 'success',
+                accountId,
+                name,
+                cash,
+                stocks,
+                picture,
                 jwt: token.compact()
             }
         } else {
-            return { status: 'failed' }
+            return { status: 'fail' }
         }
 
     }
