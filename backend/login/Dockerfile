@@ -9,7 +9,7 @@ ENV USERSAPIHOST arcadia-users
 ENV LOGINAPIHOST arcadia-login
 ENV CASHTAPIHOST arcadia-cash-transfer
 ENV STOCKTAPIHOST arcadia-stock-transfer
-ENV STOCKSAPIHOST arcadia-stock
+ENV STOCKSAPIHOST arcadia-stocks
 
 
 # Install app dependencies

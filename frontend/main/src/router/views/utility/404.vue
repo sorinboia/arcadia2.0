@@ -19,7 +19,7 @@ export default {
             </h1>
             <h4 class="text-uppercase">Sorry, page not found</h4>
             <div class="mt-5 text-center">
-              <router-link tag="a" class="btn btn-primary" to="/">Back to Dashboard</router-link>
+              <router-link tag="a" class="btn btn-primary" to="/">Back to root</router-link>
             </div>
           </div>
         </div>

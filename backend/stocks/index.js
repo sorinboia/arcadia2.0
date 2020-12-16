@@ -1,17 +1,16 @@
 const argv = require('yargs').argv;
 
-const arcadiaDB = argv.db || '10.100.102.13';
 const bitfinex = require('./bitfinex');
 
 const {webPort, usersApiHost, loginApiHost, cashtApiHost, stocktApiHost } = argv;
 
 
 const fastify = require('fastify')({ logger: true });
-const mongoose = require('mongoose');
 
-const ARCADIA_DB = `mongodb://${arcadiaDB}/arcadia-db`;
+
+
 const API_VERSION = 'v1';
-const Stock = require('./models/stock');
+
 
 fastify.route({
     method: 'GET',
@@ -84,9 +83,6 @@ fastify.route({
 
 const start = async () => {
     try {
-        await mongoose.connect(ARCADIA_DB);
-        fastify.log.info('Connected to DB');
-
         await fastify.listen(webPort || 3000,'0.0.0.0');
         fastify.log.info(`server listening on ${fastify.server.address().port}`);
 

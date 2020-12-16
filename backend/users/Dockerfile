@@ -9,7 +9,8 @@ ENV USERSAPIHOST arcadia-users
 ENV LOGINAPIHOST arcadia-login
 ENV CASHTAPIHOST arcadia-cash-transfer
 ENV STOCKTAPIHOST arcadia-stock-transfer
-ENV STOCKSAPIHOST arcadia-stock
+ENV STOCKSAPIHOST arcadia-stocks
+ENV DB arcadia-db
 
 
 # Install app dependencies
@@ -25,4 +26,4 @@ COPY . .
 COPY . .
 
 EXPOSE 80
-CMD ["sh","-c", "node index.js --webPort=$WEBPORT --usersApiHost=$USERSAPIHOST --loginApiHost=$LOGINAPIHOST --cashtApiHost=$CASHTAPIHOST --stocktApiHost=$STOCKTAPIHOST --stocksApiHost=$STOCKSAPIHOST"]
+CMD ["sh","-c", "node index.js --db=$DB --webPort=$WEBPORT --usersApiHost=$USERSAPIHOST --loginApiHost=$LOGINAPIHOST --cashtApiHost=$CASHTAPIHOST --stocktApiHost=$STOCKTAPIHOST --stocksApiHost=$STOCKSAPIHOST"]
