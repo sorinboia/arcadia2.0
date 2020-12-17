@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: arcadia-db
-          image: sorinboia/arcadia-db:0.1
+          image: sorinboia/arcadia-db:v0.1
           imagePullPolicy: Always
           ports:
             - containerPort: 80

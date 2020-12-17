@@ -1,15 +1,15 @@
 const btc = {
-    ticker: null,
+    ticker: {ask: 111, bid: 111},
     candles: []
 };
 
 const eth = {
-    ticker: null,
+    ticker: {ask: 111, bid: 111},
     candles: []
 };
 
 const ltc = {
-    ticker: null,
+    ticker: {ask: 111, bid: 111},
     candles: []
 };
 

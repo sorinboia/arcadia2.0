@@ -41,6 +41,8 @@ fastify.route({
     url: `/${API_VERSION}/user/:accountId`,
     preValidation: [fastify.authenticate],
     handler: async (request,reply) => {
+        console.log('HEADERS USERS',request.headers);
+
         const  { accountId, email, name, cash, stocks } = await User.findOne({ accountId : request.params.accountId});
 
         return { accountId, email, name, cash, stocks };
@@ -103,7 +105,7 @@ fastify.route({
     method: 'GET',
     url: `/${API_VERSION}/user_i/:email`,
     handler: async (request,reply) => {
-
+        console.log('HEADERS USERS I',request.headers);
         const email = (new Buffer(request.params.email,'base64')).toString();
         const result = await User.findOne({ email });
         return result;

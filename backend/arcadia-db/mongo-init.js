@@ -18,7 +18,20 @@ let res = [
             "ltc" : 40.1
         },
         "picture" : "default"
-    })
+    }),
+    db.users.insert({
+        "accountId" : "85408892",
+        "name" : "Satoshi Nakamoto",
+        "email" : "satoshi@bitcoin.com",
+        "cash" : 5902.248,
+        "password" : "bitcoin",
+        "stocks" : {
+            "btc" : 3.1,
+            "eth" : 3.5,
+            "ltc" : 40.1
+        },
+        "picture" : "default"
+    }),
 
 ];
 
