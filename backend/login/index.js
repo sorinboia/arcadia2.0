@@ -16,14 +16,34 @@ const API_VERSION = 'v1';
 const USER_API = `http://${usersApiHost}/v1`; //`http://users/v1`
 
 
+const openTracingHeaders = (headers) => {
+    const resultHeaders = Object.keys(headers).filter( x => x.indexOf('x-')  === 0);
+    const finalHeaders = {};
+
+    resultHeaders.forEach((head) => {
+        finalHeaders[head] = headers[head]
+    });
+    return finalHeaders;
+};
+
+
+
+
+
+
 // Login flow
 fastify.route({
     method: 'POST',
     url: `/${API_VERSION}/login`,
     handler: async (request,reply) => {
+
+
+
         const { email, password } = request.body;
         const b64_email = (new Buffer(email)).toString('base64');
-        const result = await axios.get(`${USER_API}/user_i/${b64_email}`);
+        const result = await axios.get(`${USER_API}/user_i/${b64_email}`,{
+            headers: openTracingHeaders(request.headers)
+        });
 
         if (!result.data) return { status: 'fail' };
 

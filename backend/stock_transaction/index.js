@@ -17,6 +17,20 @@ const StockTransaction = require('./models/stock_transaction');
 
 const fp = require("fastify-plugin");
 
+
+
+
+
+const openTracingHeaders = (headers) => {
+    const resultHeaders = Object.keys(headers).filter( x => x.indexOf('x-')  === 0);
+    const finalHeaders = {};
+
+    resultHeaders.forEach((head) => {
+        finalHeaders[head] = headers[head]
+    });
+    return finalHeaders;
+};
+
 fp(async function(opts) {
     fastify.register(require("fastify-jwt"), {
         secret: "top-secret-phrase"
@@ -60,11 +74,13 @@ fastify.route({
         const result = await Promise.all([
             axios.get(`http://${usersApiHost}/v1/user/${accountId}`,{
                 headers: {
-                    authorization
+                    authorization,
+                    ...openTracingHeaders(request.headers)
                 }}),
             axios.get(`http://${stocksApiHost}/v1/stock/ticker/${symbol}`,{
                 headers: {
-                    authorization
+                    authorization,
+                    ...openTracingHeaders(request.headers)
                 }}),
         ]);
 
@@ -102,7 +118,8 @@ fastify.route({
             method: 'PATCH',
             url: `http://${usersApiHost}/v1/user`,
             headers: {
-                authorization
+                authorization,
+                ...openTracingHeaders(request.headers)
             },
             data: data
         });
