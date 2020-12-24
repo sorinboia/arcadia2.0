@@ -32,6 +32,19 @@ let res = [
         },
         "picture" : "default"
     }),
+    db.users.insert({
+        "accountId" : "44402892",
+        "name" : "Sorin Boiangiu",
+        "email" : "sorinboia@gmail.com",
+        "cash" : 5902.248,
+        "password" : "bitcoin",
+        "stocks" : {
+            "btc" : 3.1,
+            "eth" : 3.5,
+            "ltc" : 40.1
+        },
+        "picture" : "default"
+    }),
 
 ];
 

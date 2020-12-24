@@ -1,5 +1,9 @@
 const axios = require('axios');
+const OktaAuth = require('@okta/okta-auth-js').OktaAuth;
+const authClient = new OktaAuth({issuer: 'https://dev-4525016.okta.com'});
 
+
+const oktaClientId = '0oa2whwsyXkTezkuD5d6';
 
 class User {
 
@@ -22,6 +26,42 @@ class User {
 
 
     }
+
+
+    oktaLogin({email,password}) {
+        this.email = email;
+        return new Promise(async (res,rej) => {
+            const transaction = await authClient.signIn({username: email, password: password}).catch(err => {
+                rej(err);
+            });
+            if (transaction.status === 'SUCCESS') {
+                const response = await authClient.token.getWithoutPrompt({
+                    clientId: oktaClientId,
+                    responseType: ['id_token', 'token'],
+                    scopes: ['openid', 'email', 'profile'],
+                    sessionToken: transaction.sessionToken,
+                    redirectUri: window.location.origin + '/login/callback'
+                });
+
+
+                //localStorage.token = response.tokens.accessToken;
+                //localStorage.idToken = response.tokens.idToken;
+
+                this.jwt = response.tokens.idToken.value;
+                this.axios = axios.create({
+                    headers: { Authorization: `Bearer ${this.jwt}` }
+                });
+                this.accountId = (await this.getAccountIdFromEmail()).accountId;
+                this.refreshCurrentUser()
+                    .then((data) => {
+                        data.jwt = this.jwt;
+                        res(data);
+                    })
+            }
+        });
+    }
+
+
 
     login({email,password}) {
         this.email = email;
@@ -64,6 +104,11 @@ class User {
 
     async refreshCurrentUser() {
         const result = await this.axios.get(`/v1/user/${this.accountId}`);
+        return result.data;
+    }
+
+    async getAccountIdFromEmail() {
+        const result = await this.axios.get(`/v1/user/email/${this.email}`);
         return result.data;
     }
 

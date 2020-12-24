@@ -34,7 +34,7 @@ const actions = {
         router.push('/login');
     },
     async logIn({commit},data) {
-        const  result  = await user.login({email:data.email,password:data.password});
+        const  result  = await user.oktaLogin({email:data.email,password:data.password});
 
         if (result.status == 'success') {
 

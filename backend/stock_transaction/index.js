@@ -22,7 +22,7 @@ const fp = require("fastify-plugin");
 
 
 const openTracingHeaders = (headers) => {
-    const resultHeaders = Object.keys(headers).filter( x => x.indexOf('x-')  === 0);
+    const resultHeaders = Object.keys(headers).filter( x => (x.indexOf('x-')  === 0) || (x.indexOf('okta-')  === 0));
     const finalHeaders = {};
 
     resultHeaders.forEach((head) => {
@@ -37,6 +37,14 @@ fp(async function(opts) {
     });
 
     fastify.decorate("authenticate", async function(request, reply) {
+
+        if (request.headers['okta-user']) {
+            request.user = {
+                sub: request.headers['okta-user']
+            };
+            return
+        }
+
         try {
             await request.jwtVerify()
         } catch (err) {
@@ -68,7 +76,13 @@ fastify.route({
     handler: async (request,reply) => {
 
         const authorization = request.headers.authorization;
-        const accountId = request.user.sub;
+        const accountId = (await axios.get(`http://${usersApiHost}/v1/user/email/${request.user.sub}`,{
+            headers: {
+                authorization,
+                ...openTracingHeaders(request.headers)
+            }})).data.accountId;
+
+
         const { symbol, amount, transactionType } = request.body;
 
         const result = await Promise.all([
@@ -101,7 +115,6 @@ fastify.route({
                 return { status: 'fail', reason: 'Balance to low', accountId, symbol, transactionType, amount};
             }
 
-            console.log('WHAT IS THIS',data.stocks[symbol],amount);
             data.cash = user_cash - stock_price * amount;
             data.stocks[symbol] +=  amount;
 

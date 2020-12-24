@@ -8,14 +8,15 @@ stocksHost="localhost:3004"
 stocktHost="localhost:3005"
 db="localhost"
 
+nginx_config="$PWD/scripts/dev/nginx/conf.d"
+
 args_command="--db=$db --usersApiHost=$usersHost --loginApiHost=$loginHost --cashtApiHost=$cashtsHost --stocktApiHost=$stocktHost --stocksApiHost=$stocksHost"
 
 
 
 (cd frontend/main && npm run serve) & \
-node backend/users/index.js --webPort=3001  $args_command & \
-node backend/login/index.js --webPort=3002  $args_command & \
-node backend/cash_transfer/index.js --webPort=3003  $args_command & \
-node backend/stocks/index.js --webPort=3004  $args_command & \
-node backend/stock_transaction/index.js --webPort=3005  $args_command & \
-node scripts/dev/dev_proxy/index.js
+nodemon backend/users/index.js --webPort=3001  $args_command & \
+nodemon backend/login/index.js --webPort=3002  $args_command & \
+nodemon backend/cash_transfer/index.js --webPort=3003  $args_command & \
+nodemon backend/stocks/index.js --webPort=3004  $args_command & \
+nodemon backend/stock_transaction/index.js --webPort=3005  $args_command
