@@ -3,7 +3,7 @@ kind: VirtualServer
 metadata:
   name: arcadia
 spec:
-  host: localhost
+  host: arcadia.nginx-experience.com
   upstreams:
     - name: arcadia-users
       service: arcadia-users

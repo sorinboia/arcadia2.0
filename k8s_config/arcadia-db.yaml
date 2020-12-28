@@ -26,7 +26,6 @@ kind: Service
 metadata:
   name: arcadia-db
 spec:
-  type: NodePort
   ports:
     - port: 27017
       targetPort: 27017
