@@ -22,6 +22,7 @@ const fp = require("fastify-plugin");
 
 
 const openTracingHeaders = (headers) => {
+    // Also adding okta headers
     const resultHeaders = Object.keys(headers).filter( x => (x.indexOf('x-')  === 0) || (x.indexOf('okta-')  === 0));
     const finalHeaders = {};
 

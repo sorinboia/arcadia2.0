@@ -1,0 +1,1 @@
+docker run --name nginx-arcadia --mount type=bind,source=/c/Users/boiangiu/Desktop/arcadia/scripts/dev/nginx/conf.d,target=/etc/nginx/conf.d,readonly  --mount type=bind,source=/c/Users/boiangiu/Desktop/arcadia/scripts/dev/nginx/nginx.conf,target=/etc/nginx/nginx.conf,readonly -p 8080:80 -p 8081:8080 -p 8443:443 -d sorinboia/nginxplus

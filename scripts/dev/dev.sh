@@ -14,9 +14,9 @@ args_command="--db=$db --usersApiHost=$usersHost --loginApiHost=$loginHost --cas
 
 
 
-(cd frontend/main && npm run serve) & \
-nodemon backend/users/index.js --webPort=3001  $args_command & \
-nodemon backend/login/index.js --webPort=3002  $args_command & \
-nodemon backend/cash_transfer/index.js --webPort=3003  $args_command & \
-nodemon backend/stocks/index.js --webPort=3004  $args_command & \
-nodemon backend/stock_transaction/index.js --webPort=3005  $args_command
+(cd frontend/main && npm run serve) #& \
+#nodemon backend/users/index.js --webPort=3001  $args_command & \
+#nodemon backend/login/index.js --webPort=3002  $args_command & \
+#nodemon backend/cash_transfer/index.js --webPort=3003  $args_command & \
+#nodemon backend/stocks/index.js --webPort=3004  $args_command & \
+#nodemon backend/stock_transaction/index.js --webPort=3005  $args_command
