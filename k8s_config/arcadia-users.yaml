@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: arcadia-users
-          image: sorinboia/arcadia-users:v0.1
+          image: sorinboia/arcadia-users:oktav0.1
           imagePullPolicy: Always
           ports:
             - containerPort: 80
