@@ -1,6 +1,5 @@
 apiVersion: k8s.nginx.org/v1
 kind: VirtualServer
-namespace: arcadia
 metadata:
   name: arcadia
 spec:
