@@ -1,5 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
+namespace: arcadia
 metadata:
   name: arcadia-stocks
 spec:
