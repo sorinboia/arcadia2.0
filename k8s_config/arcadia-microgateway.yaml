@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microgateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microgateway
+
+  template:
+    metadata:
+      labels:
+        app: microgateway
+    spec:
+      containers:
+        - name: microgateway
+          image: sorinboia/nginx-agent:latest
+          imagePullPolicy: Always
+          env:
+            - name: ENV_CONTROLLER_API_URL
+              value: https://3.123.16.111:8443/1.4
+            - name: ENV_CONTROLLER_API_KEY
+              value: 9efb753539f4136dd5e875da96aba943
+            - name: ENV_CONTROLLER_INSTANCE_NAME
+              value: microgateway
+            - name: ENV_CONTROLLER_LOCATION
+              value: kubernetes
+          ports:
+            - containerPort: 80
+
+
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: microgateway
+spec:
+  selector:
+    app: microgateway
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http
+    - port: 443
+      targetPort: 443
+      name: https
+  externalTrafficPolicy: Local
+  type: LoadBalancer
