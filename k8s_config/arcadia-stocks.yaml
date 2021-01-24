@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: arcadia-stocks
-          image: sorinboia/arcadia-stocks:oktav0.1
+          image: sorinboia/arcadia-stocks:solday
           imagePullPolicy: Always
           ports:
             - containerPort: 80

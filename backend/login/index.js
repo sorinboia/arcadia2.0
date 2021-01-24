@@ -9,6 +9,30 @@ const {webPort, usersApiHost, loginApiHost, cashtApiHost, stocktApiHost } = argv
 
 
 const fastify = require('fastify')({ logger: true });
+const oas = require('fastify-oas');
+fastify.register(oas,{
+        routePrefix: '/documentation',
+        swagger: {
+            info: {
+                title: 'Test openapi',
+                description: 'testing the fastify swagger api',
+                version: '0.1.0',
+            },
+            externalDocs: {
+                url: 'https://swagger.io',
+                description: 'Find more info here',
+            },
+            consumes: ['application/json'],
+            produces: ['application/json'],
+        },
+        exposeRoute: true
+    }
+);
+
+
+
+
+
 const axios = require('axios');
 const jwt = require('njwt');
 
@@ -35,6 +59,28 @@ const openTracingHeaders = (headers) => {
 fastify.route({
     method: 'POST',
     url: `/${API_VERSION}/login`,
+    schema: {
+        body: {
+          type: 'object',
+          properties: {
+              email: {type: 'string'},
+              password: {type:'string'}
+          }
+        },
+        response: {
+            200: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string' },
+                    accountId: { type: 'number' },
+                    name: { type: 'string' },
+                    cash:  { type: 'number' },
+                    stocks:  { type: 'object' },
+                    jwt:  { type: 'string' },
+                }
+            }
+        }
+    },
     handler: async (request,reply) => {
 
 
@@ -78,7 +124,7 @@ const start = async () => {
     try {
         await fastify.listen(webPort || 3001,'0.0.0.0');
         fastify.log.info(`server listening on ${fastify.server.address().port}`);
-
+        fastify.oas();
     } catch (err) {
         fastify.log.error(err);
         process.exit(1)
