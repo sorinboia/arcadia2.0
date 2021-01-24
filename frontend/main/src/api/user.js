@@ -4,6 +4,8 @@ const authClient = new OktaAuth({issuer: 'https://dev-4525016.okta.com'});
 
 
 const oktaClientId = '0oa2whwsyXkTezkuD5d6';
+const apiDomain = 'https://api2.arcadiacrypto.net';
+
 
 class User {
 
@@ -98,22 +100,22 @@ class User {
     }
 
     async stockTransaction({symbol,transactionType,amount}) {
-        const result = await this.axios.post('/v1/stockt',{symbol,transactionType,amount:parseFloat(amount)});
+        const result = await this.axios.post(`${apiDomain}/v1/stockt`,{symbol,transactionType,amount:parseFloat(amount)});
         return result.data;
     }
 
     async refreshCurrentUser() {
-        const result = await this.axios.get(`/v1/user/${this.accountId}`);
+        const result = await this.axios.get(`${apiDomain}/v1/user/${this.accountId}`);
         return result.data;
     }
 
     async getAccountIdFromEmail() {
-        const result = await this.axios.get(`/v1/user/email/${this.email}`);
+        const result = await this.axios.get(`${apiDomain}/v1/user/email/${this.email}`);
         return result.data;
     }
 
     async getAllTransactions() {
-        const result = await this.axios.get(`/v1/stockt/transactions/${this.accountId}`);
+        const result = await this.axios.get(`${apiDomain}/v1/stockt/transactions/${this.accountId}`);
         return result.data;
     }
 }
