@@ -3,8 +3,9 @@ const OktaAuth = require('@okta/okta-auth-js').OktaAuth;
 const authClient = new OktaAuth({issuer: 'https://dev-4525016.okta.com'});
 
 
-const oktaClientId = '0oa2whwsyXkTezkuD5d6';
+const oktaClientId = '0oa49htb5Ile8O6gz5d6';
 const apiDomain = 'https://api2.arcadiacrypto.net';
+//const apiDomain = 'http://127.0.0.1:8080';
 
 
 class User {
@@ -25,10 +26,7 @@ class User {
             });
             this.loggedIn = true;
         }
-
-
     }
-
 
     oktaLogin({email,password}) {
         this.email = email;

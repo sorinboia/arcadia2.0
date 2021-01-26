@@ -7,6 +7,11 @@ const {webPort, usersApiHost, loginApiHost, cashtApiHost, stocktApiHost } = argv
 
 
 const fastify = require('fastify')({ logger: true });
+fastify.register(require('fastify-cors'), {
+    origin: true,
+    methods: ['GET', 'PUT', 'POST', 'PATCH']
+});
+
 const mongoose = require('mongoose');
 
 

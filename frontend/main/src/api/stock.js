@@ -1,5 +1,8 @@
 const axios = require('axios');
+
+
 const apiDomain = 'https://api2.arcadiacrypto.net';
+//const apiDomain = 'http://127.0.0.1:8080';
 
 class Stock {
 
@@ -9,7 +12,7 @@ class Stock {
 
     stockTicker(symbol) {
         return new Promise((res,rej) => {
-            axios.get(`${apiDomain}/v1/stock/ticker/${symbol}`,{withCredentials: true})
+            axios.get(`${apiDomain}/v1/stock/ticker/${symbol}`)
                 .then((response) => {
                     res(response.data);
                 }).catch((err) => {
@@ -20,7 +23,7 @@ class Stock {
 
     stockCandles(symbol) {
         return new Promise((res,rej) => {
-            axios.get(`${apiDomain}/v1/stock/candles/${symbol}`,{withCredentials: true})
+            axios.get(`${apiDomain}/v1/stock/candles/${symbol}`)
                 .then((response) => {
                     res(response.data);
                 }).catch((err) => {
