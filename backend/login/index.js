@@ -14,6 +14,34 @@ fastify.register(require('fastify-cors'), {
     methods: ['GET', 'PUT', 'POST', 'PATCH']
 });
 
+const fp = require("fastify-plugin");
+
+fp(async function(opts) {
+    fastify.register(require("fastify-jwt"), {
+        secret: "top-secret-phrase"
+    });
+
+    fastify.decorate("authenticate", async function(request, reply) {
+
+
+        if (request.headers['okta-user']) {
+            request.user = {
+                sub: request.headers['okta-user']
+            };
+            return
+        }
+
+        try {
+            await request.jwtVerify()
+        } catch (err) {
+            reply.send(err)
+        }
+    })
+}) ();
+
+
+
+
 const axios = require('axios');
 const jwt = require('njwt');
 
@@ -22,7 +50,7 @@ const USER_API = `http://${usersApiHost}/v1`; //`http://users/v1`
 
 
 const openTracingHeaders = (headers) => {
-    const resultHeaders = Object.keys(headers).filter( x => x.indexOf('x-')  === 0);
+    const resultHeaders = Object.keys(headers).filter( x => (x.indexOf('x-')  === 0) || (x.indexOf('okta-')  === 0));
     const finalHeaders = {};
 
     resultHeaders.forEach((head) => {
@@ -69,6 +97,65 @@ fastify.route({
             }
         } else {
             return { status: 'fail' }
+        }
+
+    }
+});
+
+
+fastify.route({
+    method: 'GET',
+    url: `/${API_VERSION}/login/deviceid`,
+    preValidation: [fastify.authenticate],
+    handler: async (request,reply) => {
+
+        const authorization = request.headers.authorization;
+        const email = request.user.sub;
+        const cookies = request.headers.cookie.split(';');
+
+        let deviceIdCookie = null;
+
+        cookies.forEach((cookie) => {
+           cookieArr = cookie.trim().split('=');
+           if (cookieArr[0] == '_imp_apg_r_') deviceIdCookie = cookieArr[1]
+        });
+
+        const b64_email = (new Buffer(email)).toString('base64');
+        const result = await axios.get(`${USER_API}/user_i/${b64_email}`,{
+            authorization,
+            headers: openTracingHeaders(request.headers)
+        });
+
+        if (!result.data) return { status: 'fail' };
+
+        const  { accountId, deviceId } = result.data;
+
+        console.log('\r\n***************************************\r\n');
+        console.log('deviceId',deviceId);
+        console.log('Cookie deviceId',deviceId);
+        console.log('\r\n***************************************\r\n');
+
+
+        if (!deviceId) {
+
+            await axios({
+                method: 'PATCH',
+                url: `http://${usersApiHost}/v1/user`,
+                headers: {
+                    authorization,
+                    ...openTracingHeaders(request.headers)
+                },
+                data: {
+                    accountId,
+                    deviceId: deviceIdCookie
+                }
+            });
+
+            return {status:'success', msg: 'first time login'}
+        } else if (deviceId == deviceIdCookie) {
+            return {status:'success'}
+        } else {
+            return {status:'fail', msg: 'Device id not valid',deviceId,deviceIdCookie}
         }
 
     }

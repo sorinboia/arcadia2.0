@@ -15,7 +15,8 @@ fastify.register(require('fastify-cors'), {
 const mongoose = require('mongoose');
 
 
-const ARCADIA_DB = `mongodb://${arcadiaDB}/arcadia-db`;
+//const ARCADIA_DB = `mongodb://arcadiaDbUser:rNgQRf4FFoJrRYed@${arcadiaDB}/arcadia-db`;
+const ARCADIA_DB = 'mongodb+srv://arcadiaDbUser:rNgQRf4FFoJrRYed@cluster0.qja3c.mongodb.net/arcadia-db?retryWrites=true&w=majority';
 const API_VERSION = 'v1';
 const User = require('./models/user');
 
@@ -29,7 +30,7 @@ fp(async function(opts) {
 
     fastify.decorate("authenticate", async function(request, reply) {
 
-
+        console.log('\r\n\r\n*********************************************************',request.headers);
         if (request.headers['okta-user']) {
             request.user = {
                 sub: request.headers['okta-user']
@@ -95,7 +96,7 @@ fastify.route({
     handler: async (request,reply) => {
         const result = await User.findOne({ email: request.user.sub });
         const accountId = result.accountId;
-        const { name, email, picture, cash, password,stocks } = request.body;
+        const { name, email, picture, cash, password,stocks, deviceId } = request.body;
         const user = await User.findOne({ accountId });
         user.name = name || user.name;
         user.email  = email || user.email;
@@ -103,6 +104,7 @@ fastify.route({
         user.cash  = cash || user.cash;
         user.password  = password || user.password;
         user.stocks  = stocks || user.stocks;
+        user.deviceId  = deviceId || user.deviceId;
 
         user.save ( function (err) {
             if (err) throw(err);

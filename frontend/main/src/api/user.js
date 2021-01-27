@@ -4,7 +4,7 @@ const authClient = new OktaAuth({issuer: 'https://dev-4525016.okta.com'});
 
 
 const oktaClientId = '0oa49htb5Ile8O6gz5d6';
-const apiDomain = 'https://api2.arcadiacrypto.net';
+const apiDomain = '';
 //const apiDomain = 'http://127.0.0.1:8080';
 
 
@@ -52,6 +52,12 @@ class User {
                     headers: { Authorization: `Bearer ${this.jwt}` }
                 });
                 this.accountId = (await this.getAccountIdFromEmail()).accountId;
+                const deviceIdCheck = await this.checkDeviceId();
+                if (deviceIdCheck.status == 'fail') {
+                    rej(deviceIdCheck);
+                    return;
+                }
+
                 this.refreshCurrentUser()
                     .then((data) => {
                         data.jwt = this.jwt;
@@ -114,6 +120,11 @@ class User {
 
     async getAllTransactions() {
         const result = await this.axios.get(`${apiDomain}/v1/stockt/transactions/${this.accountId}`);
+        return result.data;
+    }
+
+    async checkDeviceId() {
+        const result = await this.axios.get(`${apiDomain}/v1/login/deviceid`);
         return result.data;
     }
 }

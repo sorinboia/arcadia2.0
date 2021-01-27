@@ -6,7 +6,7 @@ loginHost="localhost:3002"
 cashtHost="localhost:3003"
 stocksHost="localhost:3004"
 stocktHost="localhost:3005"
-db="localhost"
+db="this_is_not_actually_used"
 
 nginx_config="$PWD/scripts/dev/nginx/conf.d"
 
@@ -20,3 +20,5 @@ nodemon backend/login/index.js --webPort=3002  $args_command & \
 nodemon backend/cash_transfer/index.js --webPort=3003  $args_command & \
 nodemon backend/stocks/index.js --webPort=3004  $args_command & \
 nodemon backend/stock_transaction/index.js --webPort=3005  $args_command
+
+

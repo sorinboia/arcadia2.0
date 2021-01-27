@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 
-const apiDomain = 'https://api2.arcadiacrypto.net';
+const apiDomain = '';
 //const apiDomain = 'http://127.0.0.1:8080';
 
 class Stock {

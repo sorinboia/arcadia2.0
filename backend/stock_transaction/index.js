@@ -16,7 +16,7 @@ fastify.register(require('fastify-cors'), {
 const mongoose = require('mongoose');
 const axios = require('axios');
 
-const ARCADIA_DB = `mongodb://${arcadiaDB}/arcadia-db`;
+const ARCADIA_DB = 'mongodb+srv://arcadiaDbUser:rNgQRf4FFoJrRYed@cluster0.qja3c.mongodb.net/arcadia-db?retryWrites=true&w=majority';
 const API_VERSION = 'v1';
 const StockTransaction = require('./models/stock_transaction');
 
