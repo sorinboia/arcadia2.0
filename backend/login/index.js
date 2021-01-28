@@ -96,7 +96,7 @@ fastify.route({
                 jwt: token.compact()
             }
         } else {
-            return { status: 'fail' }
+            return { status: 'fail', msg:'Bad credentials' }
         }
 
     }
@@ -130,10 +130,10 @@ fastify.route({
 
         const  { accountId, deviceId } = result.data;
 
-        console.log('\r\n***************************************\r\n');
-        console.log('deviceId',deviceId);
-        console.log('Cookie deviceId',deviceId);
-        console.log('\r\n***************************************\r\n');
+        request.log.info('\r\n***************************************\r\n');
+        request.log.info('deviceId',deviceId);
+        request.log.info('Cookie deviceId',deviceId);
+        request.log.info('\r\n***************************************\r\n');
 
 
         if (!deviceId) {

@@ -31,7 +31,7 @@ export default {
       email: "",
       password: "",
       submitted: false,
-      authError: null,
+      authError: '',
       tryingToLogIn: false,
       isAuthError: false,
     };
@@ -63,8 +63,8 @@ export default {
       if (this.$v.$invalid) {
         return;
       } else {
-
-        const { status, error }  = (await this.logIn({email: this.email, password: this.password}));
+        this.tryingToLogIn = true;
+        const { status, msg }  = (await this.logIn({email: this.email, password: this.password}));
 
 
         if (status == 'success') {
@@ -78,7 +78,7 @@ export default {
           );
         } else {
           this.tryingToLogIn = false;
-          this.authError = error ? error : "Login failed";
+          this.authError = msg || "Something went wrong";
           this.isAuthError = true;
         }
 
@@ -203,6 +203,11 @@ export default {
       </div>
       <!-- end col -->
     </div>
+    <b-modal v-model="tryingToLogIn"  title="Checking credentials and Device Id" centered hide-footer>
+      <div class="text-center">
+        <b-spinner label="Spinning" />
+      </div>
+    </b-modal>
     <!-- end row -->
   </Layout>
 </template>
