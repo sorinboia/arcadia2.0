@@ -3,7 +3,7 @@ const OktaAuth = require('@okta/okta-auth-js').OktaAuth;
 const authClient = new OktaAuth({issuer: 'https://dev-4525016.okta.com'});
 
 
-const oktaClientId = '0oa49htb5Ile8O6gz5d6';
+const oktaClientId = '0oa4lykg0dolkYhSK5d6';
 const apiDomain = '';
 //const apiDomain = 'http://127.0.0.1:8080';
 
