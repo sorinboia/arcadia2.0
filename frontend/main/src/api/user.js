@@ -3,7 +3,7 @@ const OktaAuth = require('@okta/okta-auth-js').OktaAuth;
 const authClient = new OktaAuth({issuer: 'https://dev-4525016.okta.com'});
 
 
-const oktaClientId = '0oa2whwsyXkTezkuD5d6';
+const oktaClientId = '0oajrmey0hI30AoRq5d6';
 
 class User {
 
