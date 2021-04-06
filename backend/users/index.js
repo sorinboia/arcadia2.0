@@ -23,6 +23,14 @@ fp(async function(opts) {
     });
 
     fastify.decorate("authenticate", async function(request, reply) {
+
+        if (request.headers['okta-user']) {
+            request.user = {
+                sub: request.headers['okta-user']
+            };
+            return
+        }
+
         try {
             await request.jwtVerify()
         } catch (err) {
@@ -45,7 +53,7 @@ fastify.route({
 
         const  { accountId, email, name, cash, stocks } = await User.findOne({ accountId : request.params.accountId});
 
-        return { accountId, email, name, cash, stocks };
+        return { status: 'success',accountId, email, name, cash, stocks };
     }
 });
 
@@ -79,8 +87,15 @@ fastify.route({
     url: `/${API_VERSION}/user`,
     preValidation: [fastify.authenticate],
     handler: async (request,reply) => {
+        let accountId;
 
-        const accountId = request.user.sub;
+        if (request.headers['okta-user']) {
+            const result = await User.findOne({ email: request.user.sub });
+            accountId = result.accountId;
+        } else {
+            accountId = request.user.sub;
+        }
+
         const { name, email, picture, cash, password,stocks } = request.body;
         const user = await User.findOne({ accountId });
         user.name = name || user.name;
@@ -105,10 +120,23 @@ fastify.route({
     method: 'GET',
     url: `/${API_VERSION}/user_i/:email`,
     handler: async (request,reply) => {
-        console.log('HEADERS USERS I',request.headers);
         const email = (new Buffer(request.params.email,'base64')).toString();
         const result = await User.findOne({ email });
         return result;
+    }
+});
+
+
+// Get account from email
+
+fastify.route({
+    method: 'GET',
+    url: `/${API_VERSION}/user/email/:email`,
+    handler: async (request,reply) => {
+        const email = request.params.email;
+
+        const result = await User.findOne({ email });
+        return {accountId:result.accountId};
     }
 });
 
