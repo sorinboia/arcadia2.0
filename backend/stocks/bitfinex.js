@@ -65,8 +65,10 @@ ws.onCandle({ key: 'trade:1D:tLTCUSD' }, (candles) => {
 });
 
 
+setTimeout(() => {
+    ws.open();
+},30000);
 
-ws.open();
 
 module.exports = {
     btc,
