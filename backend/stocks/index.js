@@ -11,6 +11,13 @@ const fastify = require('fastify')({ logger: true });
 
 const API_VERSION = 'v1';
 
+fastify.route({
+    method: 'GET',
+    url: '/healthz',
+    handler: (request,reply) => {
+        return 'Ok';
+    }
+});
 
 fastify.route({
     method: 'GET',

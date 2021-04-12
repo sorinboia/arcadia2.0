@@ -27,7 +27,13 @@ const openTracingHeaders = (headers) => {
 };
 
 
-
+fastify.route({
+    method: 'GET',
+    url: '/healthz',
+    handler: (request,reply) => {
+        return 'Ok';
+    }
+});
 
 
 

@@ -53,7 +53,13 @@ fp(async function(opts) {
     })
 }) ();
 
-
+fastify.route({
+    method: 'GET',
+    url: '/healthz',
+    handler: (request,reply) => {
+        return 'Ok';
+    }
+});
 
 //Getting user data from external sources
 fastify.route({
