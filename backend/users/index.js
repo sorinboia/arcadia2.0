@@ -39,7 +39,13 @@ fp(async function(opts) {
     })
 }) ();
 
-
+fastify.route({
+    method: 'GET',
+    url: '/healthz',
+    handler: (request,reply) => {
+        return 'Ok';
+    }
+});
 
 
 
@@ -136,6 +142,7 @@ fastify.route({
         const email = request.params.email;
 
         const result = await User.findOne({ email });
+        fastify.log.info(`Email ${email} Result ${result}`);
         return {accountId:result.accountId};
     }
 });
@@ -144,7 +151,7 @@ fastify.route({
 const start = async () => {
     try {
         await mongoose.connect(ARCADIA_DB);
-        fastify.log.info('Connected to DB');
+        fastify.log.info('Connected to DB',ARCADIA_DB);
 
         await fastify.listen(webPort || 3000,'0.0.0.0');
         fastify.log.info(`server listening on ${fastify.server.address().port}`);

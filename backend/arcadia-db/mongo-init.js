@@ -32,7 +32,19 @@ let res = [
         },
         "picture" : "default"
     }),
-
+    db.users.insert({
+        "accountId" : "2658892",
+        "name" : "Big Trader",
+        "email" : "trader@gmail.com",
+        "cash" : 5902.248,
+        "password" : "123456",
+        "stocks" : {
+            "btc" : 3.1,
+            "eth" : 3.5,
+            "ltc" : 40.1
+        },
+        "picture" : "default"
+    }),
 ];
 
 printjson(res);
