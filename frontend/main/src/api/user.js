@@ -32,7 +32,10 @@ class User {
         this.email = email;
         return new Promise(async (res,rej) => {
             const transaction = await authClient.signIn({username: email, password: password}).catch(err => {
-                rej(err);
+                res({
+                    status: 'fail',
+                    msg: 'Okta Login failed'
+                });
             });
             if (transaction.status === 'SUCCESS') {
                 const response = await authClient.token.getWithoutPrompt({
