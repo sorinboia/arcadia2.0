@@ -42,8 +42,14 @@ class User {
                     this.axios = axios.create({
                         headers: { Authorization: `Bearer ${this.jwt}` }
                     });
+                    res(response.data);
+                } else {
+                    res({
+                        status: 'fail',
+                        msg: 'Bad credentials'
+                    });
                 }
-                res(response.data);
+
             }).catch((err) => {
                 rej(err);            })
         });
