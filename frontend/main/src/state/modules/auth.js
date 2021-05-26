@@ -17,6 +17,7 @@ const mutations = {
     UPDATE_CASH_STOCK(state,newCurrentUser) {
         state.currentUser.cash = Math.round(newCurrentUser.cash * 100) / 100;
         state.currentUser.stocks = newCurrentUser.stocks;
+        sessionStorage.setItem('authUser',JSON.stringify(state.currentUser));
     }
 };
 
