@@ -65,7 +65,7 @@ metadata:
 spec:
   ports:
     - port: 80
-      targetPort: 80
+      targetPort: 8080
       protocol: TCP
       name: http
   selector:
@@ -101,7 +101,7 @@ metadata:
 spec:
   ports:
     - port: 80
-      targetPort: 80
+      targetPort: 8080
       protocol: TCP
       name: http
   selector:
@@ -137,7 +137,7 @@ metadata:
 spec:
   ports:
     - port: 80
-      targetPort: 80
+      targetPort: 8080
       protocol: TCP
       name: http
   selector:
@@ -173,7 +173,7 @@ metadata:
 spec:
   ports:
     - port: 80
-      targetPort: 80
+      targetPort: 8080
       protocol: TCP
       name: http
   selector:
@@ -209,7 +209,7 @@ metadata:
 spec:
   ports:
     - port: 80
-      targetPort: 80
+      targetPort: 8080
       protocol: TCP
       name: http
   selector:
