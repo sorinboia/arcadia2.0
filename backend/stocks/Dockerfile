@@ -4,7 +4,7 @@ FROM node:12
 WORKDIR /usr/src/app
 
 
-ENV WEBPORT 80
+ENV WEBPORT 8080
 ENV USERSAPIHOST arcadia-users
 ENV LOGINAPIHOST arcadia-login
 ENV CASHTAPIHOST arcadia-cash-transfer
@@ -24,5 +24,5 @@ COPY . .
 # Bundle app source
 COPY . .
 
-EXPOSE 80
+EXPOSE 8080
 CMD ["sh","-c", "node index.js --webPort=$WEBPORT --usersApiHost=$USERSAPIHOST --loginApiHost=$LOGINAPIHOST --cashtApiHost=$CASHTAPIHOST --stocktApiHost=$STOCKTAPIHOST --stocksApiHost=$STOCKSAPIHOST"]

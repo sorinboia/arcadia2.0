@@ -2,15 +2,10 @@
   "name": "arcadia",
   "version": "1.0.0",
   "description": "Creating Arcadia 2.0 for next level Nginx experience",
-
-
   "scripts": {
     "test": "echo \"%npm_package_devConfig_db%\" && exit 1",
     "dev": "sh ./scripts/dev/dev.sh",
     "build": "sh ./scripts/build/build.sh"
-
-
-
   },
   "repository": {
     "type": "git",

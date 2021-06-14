@@ -14,7 +14,7 @@ kind: VirtualServer
 metadata:
   name: arcadia
 spec:
-  host: arcadia.nginx-experience.com
+  host: 8799c5b6-3c51-468b-9209-52d91735ce53.access.udf.f5.com
   tls:
     secret: arcadia-wildcard
     redirect:

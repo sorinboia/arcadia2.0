@@ -1,4 +1,6 @@
-FROM mongo:latest
+#FROM mongo:latest
+
+FROM centos/mongodb-34-centos7
 
 ENV MONGO_INITDB_DATABASE arcadia-db
 
