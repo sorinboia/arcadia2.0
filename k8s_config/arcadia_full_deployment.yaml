@@ -20,6 +20,12 @@ spec:
           env:
             - name: MONGODB_ADMIN_PASSWORD
               value: mongodb
+            - name: MONGODB_USER
+              value: arcadia-mongodb-user
+            - name: MONGODB_PASSWORD
+              value: arcadia-mongodb-password arcadia-db
+            - name: MONGODB_DATABASE
+              value: arcadia-db
           ports:
             - containerPort: 27017
 
