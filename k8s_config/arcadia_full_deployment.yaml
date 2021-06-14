@@ -23,7 +23,7 @@ spec:
             - name: MONGODB_USER
               value: arcadia-mongodb-user
             - name: MONGODB_PASSWORD
-              value: arcadia-mongodb-password arcadia-db
+              value: arcadia-mongodb-password
             - name: MONGODB_DATABASE
               value: arcadia-db
           ports:
