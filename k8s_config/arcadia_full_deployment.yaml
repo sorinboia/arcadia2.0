@@ -12,7 +12,6 @@ spec:
       labels:
         app: arcadia-db
     spec:
-      #config.nsm.nginx.com/ignore-incoming-ports: "27017" # This is used by NSM to not proxy the DB connection
       containers:
         - name: arcadia-db
           image: sorinboia/arcadia-db:ocp
