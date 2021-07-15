@@ -13,7 +13,7 @@ const mongoose = require('mongoose');
 const MONGO_DB_USER = 'arcadia-mongodb-user';
 const MONGO_DB_PASSWORD = 'arcadia-mongodb-password';
 
-const ARCADIA_DB = `mongodb://${MONGO_DB_USER}:${MONGO_DB_PASSWORD}@${arcadiaDB}/arcadia-db`;
+const ARCADIA_DB = `mongodb://${arcadiaDB}/arcadia-db`;
 const API_VERSION = 'v1';
 const User = require('./models/user');
 
