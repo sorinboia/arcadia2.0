@@ -6,6 +6,8 @@ const arcadiaDB = argv.db || '10.100.102.13';
 const {webPort, usersApiHost, loginApiHost, cashtApiHost, stocktApiHost, stocksApiHost } = argv;
 
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+let ms = 0;
 
 const fastify = require('fastify')({ logger: true });
 const mongoose = require('mongoose');
@@ -60,6 +62,19 @@ fastify.route({
         return 'Ok';
     }
 });
+
+fastify.route({
+    method: 'GET',
+    url: '/delay/:delay',
+    handler: (request,reply) => {
+        ms = request.params.delay;
+        
+        return {delay:ms};
+    }
+});
+
+
+
 
 //Getting user data from external sources
 fastify.route({
@@ -163,6 +178,10 @@ fastify.route({
             return { status: 'error', transactionId, accountId, symbol, transactionType, amount};
 
         });
+
+        
+        // Creating artificial delay
+        await delay(ms);
 
         return { status: 'success', transactionId, accountId, symbol, transactionType, amount};
     }

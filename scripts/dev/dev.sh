@@ -15,7 +15,7 @@ args_command="--db=$db --usersApiHost=$usersHost --loginApiHost=$loginHost --cas
 (cd frontend/main && npm run serve) & \
 node backend/users/index.js --webPort=3001  $args_command & \
 node backend/login/index.js --webPort=3002  $args_command & \
-node backend/cash_transfer/index.js --webPort=3003  $args_command & \
+#node backend/cash_transfer/index.js --webPort=3003  $args_command & \
 node backend/stocks/index.js --webPort=3004  $args_command & \
 node backend/stock_transaction/index.js --webPort=3005  $args_command & \
 node scripts/dev/dev_proxy/index.js
