@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
+TAG=v0.1
+REPO=sorinboia
 
 (cd frontend/main && npm run build) && \
-(docker build -t sorinboia/arcadia-frontend:v0.1 frontend/main && docker push sorinboia/arcadia-frontend:v0.1) & \
-(docker build -t sorinboia/arcadia-users:v0.1 backend/users && docker push sorinboia/arcadia-users:v0.1) & \
-(docker build -t sorinboia/arcadia-login:v0.1 backend/login && docker push sorinboia/arcadia-login:v0.1) & \
-(docker build -t sorinboia/arcadia-stock_transaction:v0.1 backend/stock_transaction && docker push sorinboia/arcadia-stock_transaction:v0.1) & \
-(docker build -t sorinboia/arcadia-stocks:v0.1 backend/stocks && docker push sorinboia/arcadia-stocks:v0.1) & \
-(docker build -t sorinboia/arcadia-db:v0.1 backend/arcadia-db && docker push sorinboia/arcadia-db:v0.1)
+(docker build -t $REPO/arcadia-frontend:$TAG frontend/main && docker push $REPO/arcadia-frontend:$TAG) & \
+(docker build -t $REPO/arcadia-users:$TAG backend/users && docker push $REPO/arcadia-users:$TAG) & \
+(docker build -t $REPO/arcadia-login:$TAG backend/login && docker push $REPO/arcadia-login:$TAG) & \
+(docker build -t $REPO/arcadia-stock_transaction:$TAG backend/stock_transaction && docker push $REPO/arcadia-stock_transaction:$TAG) & \
+(docker build -t $REPO/arcadia-stocks:$TAG backend/stocks && docker push $REPO/arcadia-stocks:$TAG) & \
+(docker build -t $REPO/arcadia-db:$TAG backend/arcadia-db && docker push $REPO/arcadia-db:$TAG)
