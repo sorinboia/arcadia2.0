@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 TAG=v0.1
-REPO=sorinboia
+REPO=sorinboiaf5
 
 (cd frontend/main && npm run build) && \
 (docker build -t $REPO/arcadia-frontend:$TAG frontend/main && docker push $REPO/arcadia-frontend:$TAG) & \

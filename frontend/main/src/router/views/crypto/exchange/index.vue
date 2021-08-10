@@ -249,7 +249,7 @@ export default {
                 <b-tab
                        v-for="tType in transactionTypes"
                        :title="tType"
-                       :key="tType"
+                       :key="tType"                       
                 >
                   <h5 class="font-size-14 mb-4">{{ tType }} Coin</h5>
                   <div>
@@ -259,12 +259,12 @@ export default {
                         <div class="input-group-prepend">
                           <label class="input-group-text">Amount</label>
                         </div>
-                        <select class="custom-select" style="max-width: 90px;" v-model="transaction.crypto">
+                        <select id="select_transaction" class="custom-select" style="max-width: 90px;" v-model="transaction.crypto">
                           <option value="btc" selected>BTC</option>
                           <option value="eth">ETH</option>
                           <option value="ltc">LTC</option>
                         </select>
-                        <input type="number" class="form-control" placeholder="Input here the amount"  v-model="transaction.amount"/>
+                        <input type="number" id="amount" class="form-control" placeholder="Input here the amount"  v-model="transaction.amount"/>
                       </div>
 
                       <div class="input-group mb-3">
