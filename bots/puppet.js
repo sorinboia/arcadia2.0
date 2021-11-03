@@ -1,9 +1,6 @@
 const puppeteer = require('puppeteer');
 
 
-
-
-
 function randomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -54,13 +51,13 @@ class Puppet {
     async transaction({crypto, amount, type}) {
         await this.page.click('a[href="/crypto/exchange"]');
         await this.wait(randomNumber(1000,2000));
-        await this.page.select('select#select_transaction',crypto);
+        await this.page.select('select.custom-select',crypto);
         if (type == 'sell') {
             await this.page.click('a[aria-posinset="2"]');
         } else {
             await this.page.click('a[aria-posinset="1"]');
         }
-        await this.inputText('id="amount"',amount);
+        await this.inputText('class="form-control"',amount);
         await this.page.click('button[type="button"]');
         
     }

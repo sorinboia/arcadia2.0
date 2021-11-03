@@ -5,10 +5,10 @@ const users = argv.users || 1;
 
 
 const client = new (require('./puppet'))( {
-    targetUrl: 'http://localhost:5000/',
+    targetUrl: 'https://arcadia.vltr.nginx-experience.com/',
     credentials: {
-        username: 'sorin@nginx.com',
-        password: 'nginx'
+        username: 'satoshi@bitcoin.com',
+        password: 'bitcoin'
     },
     puppetOptions: {
         headless: true
