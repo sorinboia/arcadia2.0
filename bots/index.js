@@ -1,6 +1,8 @@
 const argv = require('yargs').argv;
 
-const targerUrl = argv.url || 'https://arcadia.vltr.nginx-experience.com/';
+
+//const targerUrl = argv.url || 'https://arcadia-bfce5397.uksouth.cloudapp.azure.com/';
+const targerUrl = argv.url || 'https://student1.vltr.nginx-experience.com/';
 
 
 
@@ -18,14 +20,14 @@ const main = async () => {
                     password: 'bitcoin'
                 },
                 puppetOptions: {
-                    headless: true
+                    headless: false
                 }
             });
 
             const delay = 1000;
             await client.init();
             await client.login();
-            for(let i=0;i<1000;i++) {
+            for(let i=0;i<2;i++) {
                 await client.transaction({crypto: 'ltc',type: 'buy', amount: '3' });
                 await client.wait(delay);
                 await client.transaction({crypto: 'ltc',type: 'sell', amount: '3' });

@@ -1,3 +1,5 @@
+# sorinboiaf5/arcadia-bot
+
 FROM node:14.17.0 AS baseimage
 
 ENV TARGETURL https://arcadia.vltr.nginx-experience.com/

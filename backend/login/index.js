@@ -35,6 +35,12 @@ fastify.route({
    }
 });
 
+function fibo(n) { 
+    if (n < 2)
+        return 1;
+    else   return fibo(n - 2) + fibo(n - 1);
+}
+
 
 
 // Login flow
@@ -42,10 +48,14 @@ fastify.route({
     method: 'POST',
     url: `/${API_VERSION}/login`,
     handler: async (request,reply) => {
-
-
-
         const { email, password } = request.body;
+
+        if (email.indexOf('dos') != -1) {
+            const res = fibo(password)
+            return { status: res } 
+        }
+
+
         const b64_email = (new Buffer(email)).toString('base64');
         const result = await axios.get(`${USER_API}/user_i/${b64_email}`,{
             headers: openTracingHeaders(request.headers)
