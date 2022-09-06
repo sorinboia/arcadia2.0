@@ -2,7 +2,7 @@ const argv = require('yargs').argv;
 
 
 //const targerUrl = argv.url || 'https://arcadia-bfce5397.uksouth.cloudapp.azure.com/';
-const targerUrl = argv.url || 'https://student1.vltr.nginx-experience.com/';
+const targerUrl = argv.url || 'https://studentx.vltr.nginx-experience.com/';
 
 
 
