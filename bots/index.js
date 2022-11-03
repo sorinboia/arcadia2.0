@@ -2,7 +2,7 @@ const argv = require('yargs').argv;
 
 
 //const targerUrl = argv.url || 'https://arcadia-bfce5397.uksouth.cloudapp.azure.com/';
-const targerUrl = argv.url || 'https://asdasdasd.vltr.nginx-experience.com/';
+const targerUrl = argv.url || 'https://0tfcee.sales-public.f5demos.com/';
 
 
 
@@ -17,7 +17,7 @@ const main = async () => {
             password: 'bitcoin'
         },
         puppetOptions: {
-            headless: true
+            headless: false
         }
     });
     try {
