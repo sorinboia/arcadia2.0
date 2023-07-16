@@ -65,11 +65,22 @@ fastify.route({
 
 fastify.route({
     method: 'GET',
-    url: '/delay/:delay',
+    url: `/${API_VERSION}/stockt/delay/:intensity`,
     handler: (request,reply) => {
-        ms = request.params.delay;
+        const intensity = request.params.intensity;
+
+        function calculateFibonacci(n) {
+            if (n <= 1) {
+                return n;
+            } else {
+                return calculateFibonacci(n - 1) + calculateFibonacci(n - 2);
+            }
+        }
         
-        return {delay:ms};
+        const result = calculateFibonacci(intensity);
+        
+        
+        return { result };
     }
 });
 
