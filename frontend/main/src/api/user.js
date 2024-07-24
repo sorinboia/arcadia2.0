@@ -77,6 +77,13 @@ class User {
         const result = await this.axios.get(`/v1/stockt/transactions/${this.accountId}`);
         return result.data;
     }
+
+    async aiChat({conversation, newQuestion}) {
+        console.log('AI CHAT');
+        const result = await this.axios.post('/v1/ai/chat',{conversation, newQuestion});
+        return result.data;
+    }
+        
 }
 
 

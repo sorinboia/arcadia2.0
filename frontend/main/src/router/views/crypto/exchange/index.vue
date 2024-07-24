@@ -3,6 +3,7 @@ import Layout from "../../../layouts/main";
 import appConfig from "@/app.config";
 import PageHeader from "@/components/page-header";
 import { mapActions } from 'vuex';
+import AIChatbot from '@/components/AIChatbot.vue';
 
 import { priceCandlestickChart, notificationData } from "./data";
 
@@ -14,7 +15,7 @@ export default {
     title: "Exchange",
     meta: [{ name: "description", content: appConfig.description }]
   },
-  components: { Layout, PageHeader },
+  components: { Layout, PageHeader, AIChatbot },
   methods: {
     ...mapActions('stock',['getAllStockCandles','stockTransaction']),
     ...mapActions('transaction',['getAllTransactions']),
@@ -355,6 +356,6 @@ export default {
         </div>
       </div>
     </div>
-
+    <AIChatbot />
   </Layout>
 </template>

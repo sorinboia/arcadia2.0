@@ -1,1 +1,3 @@
-docker run -dp 27017:27017 sorinboia/arcadia-db:v0.1
+docker run -dp 27017:27017 sorinboiaf5/arcadia-db:v0.1
+
+repopack frontend/main/src -i "*.svg,*.scss,*.css,.*.json,*.png,*.images*.,ico-landing.vue,horizontal-topbar.vue,horizontal-menu.js,lending,utility,locales"
