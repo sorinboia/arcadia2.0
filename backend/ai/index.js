@@ -56,6 +56,14 @@ fastify.route({
     }
 });
 
+fastify.route({
+    method: 'GET',
+    url: `/${API_VERSION}/ai/chat`,
+    handler: (request,reply) => {
+        return 'Ok';
+    }
+});
+
 // Ask AI
 fastify.route({
     method: 'POST',
@@ -119,7 +127,7 @@ fastify.route({
             system: `
             You are a crypto trading bot which will help the user.
             Message up to 20 characters. 
-            Bellow you have a abject in a JSON format it has the following parameters: user_data, user_transactions, stock_price, conversation.
+            Bellow you have an object in a JSON format it has the following parameters: user_data, user_transactions, stock_price, conversation.
             conversation - holds the previous messages in the conversation with the user.
             user_data - information about how much cash and crypto curency the user has.
             user_transactions - Previoulsy buy or sell order of the user

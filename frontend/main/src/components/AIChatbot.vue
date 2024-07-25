@@ -1,43 +1,50 @@
 <template>
-  <div 
-    class="ai-chatbot" 
-    :class="{ 'ai-chatbot-open': isOpen }"
-    :style="{ bottom: positionY + 'px', right: positionX + 'px' }"
-    @mousedown="startDragging"
-    @touchstart="startDragging"
-  >
-    <div class="ai-chatbot-header">
-      <h3>AI Assistant</h3>
-      <div class="ai-chatbot-controls">
-        <button v-if="isOpen" @click.stop="handleRestartChat" class="restart-button" title="Restart Chat">
-          <i class="fas fa-redo"></i>
-        </button>
-        <button class="ai-chatbot-toggle" @click.stop="toggleChat">{{ isOpen ? '−' : '+' }}</button>
-      </div>
-    </div>
-    <div v-if="isOpen" class="ai-chatbot-body">
-      <div class="ai-chatbot-messages" ref="messageContainer">
-        <div v-for="(message, index) in conversation" :key="index" :class="['message', message.sender]">
-          {{ message.text }}
+  <div>
+    <div 
+      v-if="isChatbotAvailable"
+      class="ai-chatbot" 
+      :class="{ 'ai-chatbot-open': isOpen }"
+      :style="{ bottom: positionY + 'px', right: positionX + 'px' }"
+      @mousedown="startDragging"
+      @touchstart="startDragging"
+    >
+      <div class="ai-chatbot-header">
+        <h3>AI Assistant</h3>
+        <div class="ai-chatbot-controls">
+          <button v-if="isOpen" @click.stop="handleRestartChat" class="restart-button" title="Restart Chat">
+            <i class="fas fa-redo"></i>
+          </button>
+          <button class="ai-chatbot-toggle" @click.stop="toggleChat">{{ isOpen ? '−' : '+' }}</button>
         </div>
       </div>
-      <div class="ai-chatbot-input">
-        <input 
-          v-model="userInput" 
-          @keyup.enter="handleSendMessage" 
-          placeholder="Type your message..." 
-          :disabled="isWaiting"
-        />
-        <button @click="handleSendMessage" :disabled="isWaiting">
-          {{ isWaiting ? 'Sending...' : 'Send' }}
-        </button>
+      <div v-if="isOpen" class="ai-chatbot-body">
+        <div class="ai-chatbot-messages" ref="messageContainer">
+          <div v-for="(message, index) in conversation" :key="index" :class="['message', message.sender]">
+            {{ message.text }}
+          </div>
+        </div>
+        <div class="ai-chatbot-input">
+          <input 
+            v-model="userInput" 
+            @keyup.enter="handleSendMessage" 
+            :placeholder="isWaiting ? waitingMessages[currentWaitingMessageIndex] : 'Type your message...'" 
+            :disabled="isWaiting"
+            :readonly="isWaiting"
+          />
+          <button @click="handleSendMessage" :disabled="isWaiting">
+            {{ isWaiting ? `${responseTime}s` : 'Send' }}
+          </button>
+        </div>
       </div>
+      <audio ref="audioAlert" src="@/assets/sounds/notification.wav"></audio>
     </div>
+    <div v-if="highlightResponse" class="full-page-highlight"></div>
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'vuex';
+import axios from 'axios';
 
 export default {
   name: 'AIChatbot',
@@ -50,29 +57,51 @@ export default {
       startY: 0,
       positionX: 20,
       positionY: 20,
-      isWaiting: false
+      isWaiting: false,
+      isChatbotAvailable: false,
+      waitingMessages: ['Thinking...', 'AI at work...', 'Making Magic...', 'Abracadabra...', 'Processing...'],
+      currentWaitingMessageIndex: 0,
+      waitingMessageInterval: null,
+      highlightResponse: false,
+      responseTime: 0,
+      responseTimeInterval: null
     }
   },
   computed: {
     ...mapState('aiChat', ['conversation'])
   },
   mounted() {
+    this.checkChatbotAvailability();
     window.addEventListener('mousemove', this.onDragging);
     window.addEventListener('mouseup', this.stopDragging);
     window.addEventListener('touchmove', this.onDragging);
     window.addEventListener('touchend', this.stopDragging);
-    this.$nextTick(() => {
-      this.initChat();
-    });
   },
   beforeDestroy() {
     window.removeEventListener('mousemove', this.onDragging);
     window.removeEventListener('mouseup', this.stopDragging);
     window.removeEventListener('touchmove', this.onDragging);
     window.removeEventListener('touchend', this.stopDragging);
+    this.clearWaitingMessageInterval();
+    this.clearResponseTimeInterval();
   },
   methods: {
     ...mapActions('aiChat', ['sendMessage', 'restartChat']),
+    async checkChatbotAvailability() {
+      try {
+        const response = await axios.get('/v1/ai/chat');
+        if (response.status === 200) {
+          this.isChatbotAvailable = true;
+          this.$nextTick(() => {
+            this.initChat();
+          });
+        } else {
+          console.log('AI Chatbot is not available. Status:', response.status);
+        }
+      } catch (error) {
+        console.error('Error checking AI Chatbot availability:', error);
+      }
+    },
     toggleChat(event) {
       event.stopPropagation();
       this.isOpen = !this.isOpen;
@@ -80,18 +109,59 @@ export default {
     async handleSendMessage() {
       if (this.userInput.trim() === '' || this.isWaiting) return;
       
+      const sentMessage = this.userInput;
       this.isWaiting = true;
+      this.startWaitingMessageRotation();
+      this.startResponseTimeCounter();
+      this.userInput = this.waitingMessages[0]; // Set initial waiting message
+      
       try {
-        await this.sendMessage(this.userInput);
-        this.userInput = '';
+        await this.sendMessage(sentMessage);
+        this.highlightResponseReceived();
       } catch (error) {
         console.error('Error in sending message:', error);
       } finally {
         this.isWaiting = false;
+        this.userInput = '';
+        this.clearWaitingMessageInterval();
+        this.clearResponseTimeInterval();
         this.$nextTick(() => {
           this.scrollToBottom();
         });
       }
+    },
+    startWaitingMessageRotation() {
+      this.currentWaitingMessageIndex = 0;
+      this.waitingMessageInterval = setInterval(() => {
+        this.currentWaitingMessageIndex = (this.currentWaitingMessageIndex + 1) % this.waitingMessages.length;
+        this.userInput = this.waitingMessages[this.currentWaitingMessageIndex];
+      }, 1000);
+    },
+    clearWaitingMessageInterval() {
+      if (this.waitingMessageInterval) {
+        clearInterval(this.waitingMessageInterval);
+        this.waitingMessageInterval = null;
+      }
+    },
+    startResponseTimeCounter() {
+      this.responseTime = 0;
+      this.responseTimeInterval = setInterval(() => {
+        this.responseTime++;
+      }, 1000);
+    },
+    clearResponseTimeInterval() {
+      if (this.responseTimeInterval) {
+        clearInterval(this.responseTimeInterval);
+        this.responseTimeInterval = null;
+      }
+    },
+    highlightResponseReceived() {
+      this.highlightResponse = true;
+      this.$refs.audioAlert.play();
+      
+      setTimeout(() => {
+        this.highlightResponse = false;
+      }, 1000);
     },
     handleRestartChat() {
       this.restartChat();
@@ -108,18 +178,17 @@ export default {
     startDragging(event) {
       if (event.target.closest('.ai-chatbot-header')) {
         this.isDragging = true;
-        const chatbot = event.currentTarget;
+        const chatbot = this.$el.querySelector('.ai-chatbot');
         const rect = chatbot.getBoundingClientRect();
         
         if (event.type === 'mousedown') {
           this.startX = event.clientX - rect.left;
           this.startY = event.clientY - rect.top;
-          document.body.style.userSelect = 'none'; // Prevent text selection
         } else if (event.type === 'touchstart') {
           this.startX = event.touches[0].clientX - rect.left;
           this.startY = event.touches[0].clientY - rect.top;
-          document.body.style.userSelect = 'none'; // Prevent text selection
         }
+        document.body.style.userSelect = 'none';
       }
     },
     onDragging(event) {
@@ -136,18 +205,19 @@ export default {
 
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
-      const chatbotWidth = this.$el.offsetWidth;
-      const chatbotHeight = this.$el.offsetHeight;
+      const chatbot = this.$el.querySelector('.ai-chatbot');
+      const chatbotWidth = chatbot.offsetWidth;
+      const chatbotHeight = chatbot.offsetHeight;
 
-      const newRight = windowWidth - (clientX - this.startX + chatbotWidth);
-      const newBottom = windowHeight - (clientY - this.startY + chatbotHeight);
+      const newRight = windowWidth - clientX + this.startX - chatbotWidth;
+      const newBottom = windowHeight - clientY + this.startY - chatbotHeight;
 
       this.positionX = Math.max(0, Math.min(newRight, windowWidth - chatbotWidth));
       this.positionY = Math.max(0, Math.min(newBottom, windowHeight - chatbotHeight));
     },
     stopDragging() {
       this.isDragging = false;
-      document.body.style.userSelect = ''; // Re-enable text selection
+      document.body.style.userSelect = '';
     },
     initChat() {
       this.handleRestartChat();
@@ -165,11 +235,28 @@ export default {
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
   z-index: 1000;
   transition: all 0.3s ease;
-  will-change: bottom, right; /* Optimize performance */
+  will-change: bottom, right;
 }
 
 .ai-chatbot-open {
   height: 400px;
+}
+
+.full-page-highlight {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(76, 175, 80, 0.3);
+  z-index: 9999;
+  animation: fullPageHighlight 1s ease-in-out;
+}
+
+@keyframes fullPageHighlight {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .ai-chatbot-header {
@@ -181,8 +268,8 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  -webkit-user-drag: none; /* Prevent dragging on header */
-  user-select: none; /* Prevent text selection on header */
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .ai-chatbot-controls button {
@@ -242,6 +329,7 @@ export default {
   border: none;
   border-radius: 0 5px 5px 0;
   cursor: pointer;
+  min-width: 60px;
 }
 
 .ai-chatbot-input button:disabled {
