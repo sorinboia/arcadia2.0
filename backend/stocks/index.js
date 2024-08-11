@@ -5,7 +5,7 @@ const bitfinex = require('./bitfinex');
 const {webPort, usersApiHost, loginApiHost, cashtApiHost, stocktApiHost } = argv;
 
 
-const fastify = require('fastify')({ logger: true });
+const fastify = require('fastify')({ logger: false });
 
 
 

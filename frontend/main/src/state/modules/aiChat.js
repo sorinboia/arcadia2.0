@@ -18,14 +18,10 @@ const mutations = {
 };
 
 const actions = {
-  async sendMessage({ commit, state }, newMessage) {
+  async sendMessage({ commit }, newMessage) {
     commit('ADD_MESSAGE', { sender: 'user', text: newMessage });    
     try {          
-      const response = await user.aiChat({
-        conversation: state.conversation,
-        newQuestion: newMessage
-      });
-      
+      const response = await user.aiChat({ newQuestion: newMessage });
       
       const botReply = { sender: 'bot', text: response.reply };
       commit('ADD_MESSAGE', botReply);
@@ -37,7 +33,7 @@ const actions = {
       throw error;
     }
   },
-  restartChat({ commit }) {
+  async restartChat({ commit }) {
     commit('CLEAR_CONVERSATION');
     const initialMessage = { sender: 'bot', text: 'Hello! How can I assist you with crypto trading today?' };
     commit('ADD_MESSAGE', initialMessage);
@@ -45,11 +41,10 @@ const actions = {
 };
 
 const getters = {
-
+  // You can add getters here if needed
 };
 
-export  {
-  //namespaced: true,
+export {
   state,
   mutations,
   actions,

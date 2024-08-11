@@ -3,7 +3,6 @@ FROM node:12
 # Create app directory
 WORKDIR /usr/src/app
 
-
 ENV WEBPORT 80
 ENV USERSAPIHOST arcadia-users
 ENV LOGINAPIHOST arcadia-login
@@ -13,18 +12,14 @@ ENV STOCKSAPIHOST arcadia-stocks
 ENV DB arcadia-db
 ENV AI arcadia-ai
 ENV LLM arcadia-llm
+ENV LLMMODEL llama3.1:8b
+ENV LLM_SECURITY_HOST bypass
+ENV LLM_SECURITY_APP_ID your_app_id_here
 
 # Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
 COPY package*.json ./
 RUN npm install
 COPY . .
-# If you are building your code for production
-# RUN npm ci --only=production
-
-# Bundle app source
-COPY . .
 
 EXPOSE 80
-CMD ["sh","-c", "node index.js --llmApiHost=$LLM --aiApiHost=$AI --db=$DB --webPort=$WEBPORT --usersApiHost=$USERSAPIHOST --loginApiHost=$LOGINAPIHOST --cashtApiHost=$CASHTAPIHOST --stocktApiHost=$STOCKTAPIHOST --stocksApiHost=$STOCKSAPIHOST"]
+CMD ["sh","-c", "node index.js --llmModel=$LLMMODEL --llmApiHost=$LLM --aiApiHost=$AI --db=$DB --webPort=$WEBPORT --usersApiHost=$USERSAPIHOST --loginApiHost=$LOGINAPIHOST --cashtApiHost=$CASHTAPIHOST --stocktApiHost=$STOCKTAPIHOST --stocksApiHost=$STOCKSAPIHOST --llmSecurityHost=$LLM_SECURITY_HOST --llmSecurityAppId=$LLM_SECURITY_APP_ID"]

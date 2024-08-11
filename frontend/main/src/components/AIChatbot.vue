@@ -44,7 +44,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex';
-import axios from 'axios';
+import user from '@/api/user';
 
 export default {
   name: 'AIChatbot',
@@ -87,19 +87,14 @@ export default {
   },
   methods: {
     ...mapActions('aiChat', ['sendMessage', 'restartChat']),
-    async checkChatbotAvailability() {
-      try {
-        const response = await axios.get('/v1/ai/chat');
-        if (response.status === 200) {
-          this.isChatbotAvailable = true;
-          this.$nextTick(() => {
-            this.initChat();
-          });
-        } else {
-          console.log('AI Chatbot is not available. Status:', response.status);
-        }
-      } catch (error) {
-        console.error('Error checking AI Chatbot availability:', error);
+    checkChatbotAvailability() {
+      this.isChatbotAvailable = user.loggedIn;
+      if (this.isChatbotAvailable) {
+        this.$nextTick(() => {
+          this.initChat();
+        });
+      } else {
+        console.log('AI Chatbot is not available. User not logged in.');
       }
     },
     toggleChat(event) {
@@ -163,11 +158,16 @@ export default {
         this.highlightResponse = false;
       }, 1000);
     },
-    handleRestartChat() {
-      this.restartChat();
-      this.$nextTick(() => {
-        this.scrollToBottom();
-      });
+    async handleRestartChat() {
+      try {
+        await user.resetAiChat();
+        await this.restartChat();
+        this.$nextTick(() => {
+          this.scrollToBottom();
+        });
+      } catch (error) {
+        console.error('Error resetting chat:', error);
+      }
     },
     scrollToBottom() {
       const container = this.$refs.messageContainer;

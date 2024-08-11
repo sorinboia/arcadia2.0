@@ -78,9 +78,13 @@ class User {
         return result.data;
     }
 
-    async aiChat({conversation, newQuestion}) {
-        console.log('AI CHAT');
-        const result = await this.axios.post('/v1/ai/chat',{conversation, newQuestion});
+    async aiChat({newQuestion}) {        
+        const result = await this.axios.post('/v1/ai/chat',{ newQuestion});
+        return result.data;
+    }
+
+    async resetAiChat() {
+        const result = await this.axios.get('/v1/ai/chat/reset');
         return result.data;
     }
         

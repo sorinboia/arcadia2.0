@@ -9,3 +9,4 @@ REPO=sorinboiaf5
 (docker build -t $REPO/arcadia-stock_transaction:$TAG backend/stock_transaction && docker push $REPO/arcadia-stock_transaction:$TAG) & \
 (docker build -t $REPO/arcadia-stocks:$TAG backend/stocks && docker push $REPO/arcadia-stocks:$TAG) & \
 (docker build -t $REPO/arcadia-db:$TAG backend/arcadia-db && docker push $REPO/arcadia-db:$TAG)
+(docker build -t $REPO/arcadia-ai:$TAG backend/ai && docker push $REPO/arcadia-ai:$TAG)
