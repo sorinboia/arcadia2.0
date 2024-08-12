@@ -1,0 +1,64 @@
+# Arcadia Crypto Regulatory Compliance
+
+Arcadia Crypto is committed to maintaining the highest standards of regulatory compliance across all jurisdictions in which we operate.
+
+## 1. Licenses and Registrations
+
+- United States: 
+  - FinCEN registered Money Services Business (MSB)
+  - BitLicense holder in New York State
+  - Money Transmitter Licenses in 47 states
+
+- European Union:
+  - Registered with the Malta Financial Services Authority (MFSA)
+  - Compliant with 5AMLD (Fifth Anti-Money Laundering Directive)
+
+- Asia:
+  - Licensed by the Monetary Authority of Singapore (MAS)
+  - Registered with the Japan Financial Services Agency (FSA)
+
+## 2. KYC (Know Your Customer) Policy
+
+- Tiered KYC approach based on account level and trading volume
+- Identity verification using government-issued ID
+- Proof of address required for higher tiers
+- Ongoing monitoring and periodic re-verification
+
+## 3. AML (Anti-Money Laundering) Measures
+
+- Robust AML program overseen by experienced compliance officers
+- Transaction monitoring using advanced AI algorithms
+- Suspicious activity reporting to relevant authorities
+- Regular AML risk assessments and audits
+
+## 4. Counter-Terrorist Financing (CTF)
+
+- Screening against global watchlists and sanctions lists
+- Ongoing monitoring of transactions for CTF risks
+- Collaboration with law enforcement agencies when required
+
+## 5. Tax Compliance
+
+- Annual 1099 forms provided to US customers
+- Compliance with FATCA and CRS reporting requirements
+- Integration with major tax preparation software for easy reporting
+
+## 6. Data Protection and Privacy
+
+- GDPR compliant for EU users
+- California Consumer Privacy Act (CCPA) compliant for California residents
+- Strict data retention and deletion policies
+
+## 7. Market Integrity
+
+- Market surveillance to detect and prevent market manipulation
+- Clear policies against insider trading and front-running
+- Compliance with applicable securities regulations
+
+## 8. Supported Countries/Regions
+
+- Services available in over 100 countries
+- Restrictions in place for OFAC sanctioned countries
+- Continuous monitoring of regulatory changes in all jurisdictions
+
+For detailed information about our regulatory status in specific countries or regions, please contact our compliance team at compliance@arcadiacrypto.com.

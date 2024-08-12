@@ -1,0 +1,59 @@
+# Arcadia Crypto Security Information
+
+At Arcadia Crypto, we prioritize the security of our users' assets and personal information. Our multi-layered security approach includes:
+
+## 1. Asset Security
+
+### Cold Storage
+- 95% of user assets are stored in air-gapped cold wallets
+- Multi-signature technology requiring approval from multiple key holders
+- Geographically distributed secure locations
+
+### Hot Wallet Security
+- Only 5% of assets kept in hot wallets for immediate withdrawals
+- Advanced anomaly detection systems
+- Automated risk management protocols
+
+## 2. User Account Security
+
+### Two-Factor Authentication (2FA)
+- Mandatory 2FA for all accounts
+- Options: Google Authenticator, SMS, YubiKey
+
+### Advanced Encryption
+- AES-256 encryption for all sensitive data
+- TLS 1.3 for all data in transit
+
+### Password Security
+- Salted and hashed password storage (using bcrypt)
+- Regular password rotation requirements
+- Complexity requirements enforced
+
+## 3. Platform Security
+
+### DDoS Protection
+- Enterprise-grade DDoS mitigation
+- Traffic analysis and filtering
+
+### 24/7 Security Monitoring
+- Real-time threat detection systems
+- Dedicated security operations center
+
+### Regular Security Audits
+- Quarterly internal security audits
+- Annual third-party penetration testing
+
+## 4. Insurance
+- $250 million insurance policy for assets held in cold storage
+- Covers theft and cybersecurity breaches
+
+## 5. Employee Security Measures
+- Background checks for all employees
+- Strict access controls based on role
+- Regular security training
+
+## 6. Bug Bounty Program
+- Up to $250,000 reward for critical vulnerability reports
+- Responsible disclosure policy
+
+For more details on our security measures, please visit our Security Center or contact our support team.

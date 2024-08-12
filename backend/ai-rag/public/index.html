@@ -3,123 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAG System UI</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .section {
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            padding: 20px;
-            border-radius: 5px;
-        }
-        button {
-            padding: 10px;
-            margin-top: 10px;
-        }
-        #response {
-            white-space: pre-wrap;
-            background-color: #f0f0f0;
-            padding: 10px;
-            border-radius: 5px;
-        }
-    </style>
+    <title>RagXOllama</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>RAG System UI</h1>
-    
-    <div class="section">
-        <h2>1. Upload Document</h2>
-        <input type="file" id="fileInput" accept=".pdf">
-        <button onclick="uploadFile()">Upload</button>
-        <div id="uploadResult"></div>
+    <div class="container">
+        <h1>RagXOllama</h1>
+
+        <section class="upload-section">
+            <h2>Upload Files</h2>
+            <form id="uploadForm">
+                <label for="fileInput">Select files to upload:</label>
+                <input type="file" id="fileInput" multiple>
+                <button type="submit">Upload</button>
+            </form>
+            <div id="uploadStatus"></div>
+        </section>
+
+        <section class="chat-section">
+            <h2>Chat</h2>
+            <form id="chatForm">
+                <label for="queryInput">Query:</label>
+                <input type="text" id="queryInput" placeholder="Enter your question here...">
+                <button type="submit">Send</button>
+            </form>
+            <div id="chatResponse"></div>
+        </section>
     </div>
 
-    <div class="section">
-        <h2>2. Process Document</h2>
-        <button onclick="processDocument()" id="processButton" disabled>Process Document</button>
-        <div id="processResult"></div>
-    </div>
-
-    <div class="section">
-        <h2>3. Ask a Question</h2>
-        <input type="text" id="questionInput" placeholder="Enter your question here" style="width: 100%;">
-        <button onclick="askQuestion()" id="askButton" disabled>Ask</button>
-        <div id="response"></div>
-    </div>
-
-    <script>
-        let currentDocumentId = null;
-
-        async function uploadFile() {
-            const fileInput = document.getElementById('fileInput');
-            const file = fileInput.files[0];
-            if (!file) {
-                alert('Please select a file to upload');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-                document.getElementById('uploadResult').innerText = `File uploaded successfully. Document ID: ${result.fileName}`;
-                currentDocumentId = result.fileName;
-                document.getElementById('processButton').disabled = false;
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('uploadResult').innerText = 'Error uploading file';
-            }
-        }
-
-        async function processDocument() {
-            if (!currentDocumentId) {
-                alert('Please upload a document first');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/embedding-document?document=${currentDocumentId}`);
-                const result = await response.json();
-                document.getElementById('processResult').innerText = `Document processed: ${JSON.stringify(result)}`;
-                document.getElementById('askButton').disabled = false;
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('processResult').innerText = 'Error processing document';
-            }
-        }
-
-        async function askQuestion() {
-            const question = document.getElementById('questionInput').value;
-            if (!question) {
-                alert('Please enter a question');
-                return;
-            }
-
-            if (!currentDocumentId) {
-                alert('Please upload and process a document first');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/ask?question=${encodeURIComponent(question)}&document=${currentDocumentId}`);
-                const result = await response.json();
-                document.getElementById('response').innerText = `Answer: ${result.answer}\n\nSources: ${JSON.stringify(result.source, null, 2)}`;
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('response').innerText = 'Error getting answer';
-            }
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>

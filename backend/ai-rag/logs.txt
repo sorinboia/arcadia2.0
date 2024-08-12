@@ -1,0 +1,66 @@
+zedd@VT-Pavilion:~/RagXOllama$ node index.js 
+Ingesting File Docs/Mixtral Tech Report.pdf
+...
+true
+Ingesting File Docs/PROXIMITY DETECTION SYSTEM.pdf
+...
+true
+Ingesting File Docs/did_you_know-booklet.pdf
+...
+true
+Ingesting File Docs/nma.docx
+...
+true
+Ingesting File Docs/wiki.txt
+...
+true
+Retrieved Context:
+{
+  ids: [
+    [
+      'nma.docx_chunk_1',
+      'nma.docx_chunk_24',
+      'nma.docx_chunk_31',
+      'nma.docx_chunk_45',
+      'nma.docx_chunk_36'
+    ]
+  ],
+  distances: [
+    [
+      1.1106369100795088,
+      1.250379479443009,
+      1.30488503788733,
+      1.3208756965024055,
+      1.3356942047560305
+    ]
+  ],
+  metadatas: [ [ [Object], [Object], [Object], [Object], [Object] ] ],
+  embeddings: null,
+  documents: [
+    [
+      ' OreSense PS ID : SIH1511PS Title : Real time knowledge of ore body being mined outObjective: Determine ore quality instantlyShow real time position of miner and ore body estimationEnhance miner safety through efficient response mechanism Introduction:Our cutting-edge hardware device has been meticulously engineered to seamlessly capture data from an',
+      'precise ore quality predictions.3. Dashboard Functionality:The user interface comprises different sections for comprehensive monitoring and control. The Home section displays spectral data and visual feeds, presenting computed ML outputs. The Data section provides a detailed analysis of sensor data, presented through graphs, and offers environmental information. The Map section depicts',
+      'from the camera, sent to the Raspberry Pi over a local network. The ML and DL algorithms, implemented in PyTorch, process the data on the edge device using Flask. Linear regression and CNN models provide insights into ore impurity and grade quality, respectively. The results are displayed on the LCD',
+      'model, fed with results of spectral data and visual data, classifies ore in real time, refining its weights with the latest chemical analysis results. This integrated strategy ensures a perpetual improvement loop, allowing both models to adapt and evolve over time. The result is a progressively accurate prediction of ore',
+      'scenario as closely as possible, ensuring the robustness and efficacy of our predictive model.IR Spectroscopy Data from Kaggle:Source Explanation: We utilized an IR spectroscopy dataset available on Kaggle, a reputable platform for diverse datasets.Significance: This dataset forms the foundation for the analysis of ore composition. While not directly sourced from'
+    ]
+  ],
+  uris: null,
+  data: null
+}
+You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. Use the relevant part of the context provided. If you don't know the answer, just say that you don't know. Keep the answer concise and start directly to the point. Question: Tell me about the Project OreSense. Context:  OreSense PS ID : SIH1511PS Title : Real time knowledge of ore body being mined outObjective: Determine ore quality instantlyShow real time position of miner and ore body estimationEnhance miner safety through efficient response mechanism Introduction:Our cutting-edge hardware device has been meticulously engineered to seamlessly capture data from an,precise ore quality predictions.3. Dashboard Functionality:The user interface comprises different sections for comprehensive monitoring and control. The Home section displays spectral data and visual feeds, presenting computed ML outputs. The Data section provides a detailed analysis of sensor data, presented through graphs, and offers environmental information. The Map section depicts,from the camera, sent to the Raspberry Pi over a local network. The ML and DL algorithms, implemented in PyTorch, process the data on the edge device using Flask. Linear regression and CNN models provide insights into ore impurity and grade quality, respectively. The results are displayed on the LCD,model, fed with results of spectral data and visual data, classifies ore in real time, refining its weights with the latest chemical analysis results. This integrated strategy ensures a perpetual improvement loop, allowing both models to adapt and evolve over time. The result is a progressively accurate prediction of ore,scenario as closely as possible, ensuring the robustness and efficacy of our predictive model.IR Spectroscopy Data from Kaggle:Source Explanation: We utilized an IR spectroscopy dataset available on Kaggle, a reputable platform for diverse datasets.Significance: This dataset forms the foundation for the analysis of ore composition. While not directly sourced from Answer:
+{
+  model: 'llama3',
+  created_at: '2024-04-22T09:09:39.417873004Z',
+  message: {
+    role: 'assistant',
+    content: 'The Project OreSense is an initiative that aims to determine the quality of an ore body being mined in real-time, using cutting-edge hardware and machine learning (ML) algorithms. The project involves developing a dashboard with various sections to monitor and control the mining process, providing insights into ore impurity and grade quality.'
+  },
+  done: true,
+  total_duration: 20258119943,
+  load_duration: 3093900,
+  prompt_eval_count: 342,
+  prompt_eval_duration: 3025270000,
+  eval_count: 63,
+  eval_duration: 17074956000
+}

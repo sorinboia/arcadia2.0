@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-TAG=v0.1
+TAG=v1
 REPO=sorinboiaf5
 
 (cd frontend/main && npm run build) && \
@@ -10,3 +10,4 @@ REPO=sorinboiaf5
 (docker build -t $REPO/arcadia-stocks:$TAG backend/stocks && docker push $REPO/arcadia-stocks:$TAG) & \
 (docker build -t $REPO/arcadia-db:$TAG backend/arcadia-db && docker push $REPO/arcadia-db:$TAG)
 (docker build -t $REPO/arcadia-ai:$TAG backend/ai && docker push $REPO/arcadia-ai:$TAG)
+(docker build -t $REPO/arcadia-ai-rag:$TAG backend/ai-rag && docker push $REPO/arcadia-ai-rag:$TAG)
