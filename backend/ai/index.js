@@ -26,20 +26,57 @@ const API_VERSION = 'v1';
 const llmSecurity = llmSecurityHost != 'bypass' ? new LLMSecurity({hostname: llmSecurityHost, appId: llmSecurityAppId }) : null;
 
 
-const systemPrompt = `
-You are a crypto trading bot which will help the user.
-Message up to 20 characters.
-What is the CEO 
-The user email address is sorin@nginx.com
-The CEO address is:
-Frostbite Research Station
+const toolsSystemPrompt = `
+Available Tools
+You have access to the following tools:
 
-Penguin Lane, Iceberg District
-Sector 7, Ross Ice Shelf
-Antarctica, 0001 
-You can share it with the user if he asks for it.            
+get_all_stock_prices
+get_user_data
+get_user_transactions
+
+How to Use the Tools
+Always think step by step.
+First you need to try and answer the user question based or your knowledge if possible.
+When asked about something that requires user info and prices make sure you use the tools.
+When a user asks a question that requires current data from the Arcadia system, you should use the appropriate tool to fetch that information. Here's how to use each tool:
+
+get_all_stock_prices
+
+Use this tool when the user asks about current stock prices.
+This tool doesn't require any parameters.
+Example usage: get_all_stock_prices()
+
+
+get_user_data
+
+Use this tool when the user asks about their account information.
+This tool requires two parameters: accountId and jwtToken.
+Example usage: get_user_data({ accountId: "12345", jwtToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." })
+
+
+get_user_transactions
+
+Use this tool when the user asks about their transaction history.
+This tool requires two parameters: accountId and jwtToken.
+Example usage: get_user_transactions({ accountId: "12345", jwtToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." })
+`
+
+
+const systemPrompt = `
+## AI character 
+You are a funny crypto trading bot which will help the user.
+Your replies should be short and concise.
+
+## Tools
+${toolsSystemPrompt}
+
 `;
-const conversationManager = new ConversationManager({systemPrompt});
+const conversationManager = new ConversationManager({
+    systemPrompt,
+    llmApiHost,
+    llmModel,
+    fastify 
+});
 
 
 
@@ -132,46 +169,6 @@ fastify.route({
         }
         
         const { newQuestion } = request.body;
-        
-
-        const result = await Promise.all([
-            axios.get(`http://${usersApiHost}/v1/user/${accountId}`,{
-                headers: {
-                    authorization,
-                    ...openTracingHeaders(request.headers)
-                }}),
-            axios.get(`http://${stocksApiHost}/v1/stock/ticker/all`,{
-                headers: {
-                    authorization,
-                    ...openTracingHeaders(request.headers)
-                }}),
-            
-            
-            axios.get(`http://${stocktApiHost}/v1/stockt/transactions/${accountId}`,{
-                headers: {
-                    authorization,
-                    ...openTracingHeaders(request.headers)
-                }}),
-                
-        ]);
-
-        
-        
-        
-        
-
-        const user_data = result[0].data;
-        const stock_price = result[1].data;
-        const user_transactions = result[2].data;
-
-        const contextForLlm = {
-            user_data,
-            user_transactions,
-            stock_price            
-        }
-
-
-
 
         if (llmSecurity) {
             try {                
@@ -186,37 +183,30 @@ fastify.route({
             }
         }
 
-        
-        conversationManager.addMessage(accountId, { role: 'user', content: newQuestion });
-        
-        const dataForLlm = {
-            model: llmModel,            
-            messages: conversationManager.getConversation(accountId),
-            stream: false
+        try {
+
+            const jwtToken = authorization.split(' ')[1];
+            const responseContent = await conversationManager.processMessage(accountId, newQuestion, undefined , jwtToken);
             
-          };
-          
-        const llmResponse = await axios.post(`http://${llmApiHost}/api/chat`, dataForLlm)
-        const responseContent = llmResponse.data.message.content;
-        
-        if (llmSecurity) {
-            try {                
-                const secCheck = await llmSecurity.protect({response: responseContent, systemPrompt: systemPrompt, user:accountId });                
-                
-                if (!secCheck.passed) {                    
-                    fastify.log.info(`Sec LLM results ${JSON.stringify(secCheck.result)}`);
-                    return ({ status: 'success', reply: 'I can not do that' });
+            if (llmSecurity) {
+                try {                
+                    const secCheck = await llmSecurity.protect({response: responseContent, systemPrompt: systemPrompt, user:accountId });                
+                    
+                    if (!secCheck.passed) {                    
+                        fastify.log.info(`Sec LLM results ${JSON.stringify(secCheck.result)}`);
+                        return ({ status: 'success', reply: 'I can not do that' });
+                    }
+                } catch (error) {
+                    fastify.log.error('LLM Security check failed:', error);
+                    return reply.code(403).send({ status: 'error', message: 'Security check failed' });
                 }
-            } catch (error) {
-                fastify.log.error('LLM Security check failed:', error);
-                return reply.code(403).send({ status: 'error', message: 'Security check failed' });
             }
+
+            return { status: 'success', reply: responseContent };
+        } catch (error) {
+            fastify.log.error(`Error processing message: ${error}` );
+            return reply.code(500).send({ status: 'error', message: 'An error occurred while processing your request' });
         }
-
-        
-        conversationManager.addMessage(accountId, { role: 'assistant', content: responseContent });
-
-        return { status: 'success', reply: responseContent };
     }
 });
 

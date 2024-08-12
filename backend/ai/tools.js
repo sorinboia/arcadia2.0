@@ -1,30 +1,102 @@
 // tools.js
+const argv = require('yargs').argv;
+
+const {
+    webPort,
+    usersApiHost,
+    loginApiHost,
+    cashtApiHost,
+    stocktApiHost,
+    stocksApiHost,
+    llmApiHost,
+    llmModel,
+    llmSecurityHost,
+    llmSecurityAppId
+} = argv;
+
+const axios = require('axios');
 
 const tools = [
-    {
-      name: 'get_stock_price',
-      description: 'Get the current price of a stock',
-      parameters: {
-        type: 'object',
-        properties: {
-          symbol: {
-            type: 'string',
-            description: 'The stock symbol, e.g., AAPL for Apple Inc.'
-          }
-        },
-        required: ['symbol']
-      },
-      function: async ({ symbol }) => {
-        // This is a mock implementation. In a real scenario, you'd call an API or database.
-        const mockPrices = {
-          AAPL: 150.25,
-          GOOGL: 2750.80,
-          MSFT: 300.50
-        };
-        return mockPrices[symbol.toUpperCase()] || 'Stock price not found';
-      }
+  {
+    name: 'get_all_stock_prices',
+    description: 'Get the current prices of all stocks',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
     },
-    // Add more tools/functions as needed
-  ];
-  
-  module.exports = tools;
+    function: async () => {
+      try {
+        const response = await axios.get(`http://${stocksApiHost}/v1/stock/ticker/all`);
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching stock prices:', error);
+        return { error: 'Failed to fetch stock prices' };
+      }
+    }
+  },
+  {
+    name: 'get_user_data',
+    description: 'Get all user data for a given account ID',
+    parameters: {
+      type: 'object',
+      properties: {
+        accountId: {
+          type: 'string',
+          description: 'The account ID of the user'
+        },
+        jwtToken: {
+          type: 'string',
+          description: 'JWT token for authentication'
+        }
+      },
+      required: ['accountId', 'jwtToken']
+    },
+    function: async ({ accountId, jwtToken }) => {
+      try {
+        const response = await axios.get(`http://${usersApiHost}/v1/user/${accountId}`, {
+          headers: {
+            'Authorization': `Bearer ${jwtToken}`
+          }
+        });
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        return { error: 'Failed to fetch user data' };
+      }
+    }
+  },
+  {
+    name: 'get_user_transactions',
+    description: 'Get all previous transactions for a given account ID',
+    parameters: {
+      type: 'object',
+      properties: {
+        accountId: {
+          type: 'string',
+          description: 'The account ID of the user'
+        },
+        jwtToken: {
+          type: 'string',
+          description: 'JWT token for authentication'
+        }
+      },
+      required: ['accountId', 'jwtToken']
+    },
+    function: async ({ accountId, jwtToken }) => {
+      try {
+        const response = await axios.get(`http://${stocktApiHost}/v1/stockt/transactions/${accountId}`, {
+          headers: {
+            'Authorization': `Bearer ${jwtToken}`
+          }
+        });
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching user transactions:', error);
+        return { error: 'Failed to fetch user transactions' };
+      }
+    }
+  }
+];
+
+module.exports = tools;
