@@ -18,7 +18,8 @@ const {
     llmApiHost,
     llmModel,
     llmSecurityHost,
-    llmSecurityAppId
+    llmSecurityAppId,
+    aiRag
 } = argv;
 
 const API_VERSION = 'v1';

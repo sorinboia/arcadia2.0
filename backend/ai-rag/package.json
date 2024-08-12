@@ -20,6 +20,7 @@
     "fs": "^0.0.1-security",
     "multer": "^1.4.5-lts.1",
     "ollama": "^0.5.0",
-    "pdf-parse-fork": "^1.2.0"
+    "pdf-parse-fork": "^1.2.0",
+    "yargs": "^17.7.2"
   }
 }

@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             uploadStatus.innerHTML = '<p>Uploading files...</p>';
-            const response = await fetch('/uploadFiles', {
+            const response = await fetch('/v1/ai-rag/uploadFiles', {
                 method: 'POST',
                 body: formData
             });
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             chatResponse.innerHTML = '<p>Processing your query...</p>';
-            const response = await fetch('/chat', {
+            const response = await fetch('/v1/ai-rag/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

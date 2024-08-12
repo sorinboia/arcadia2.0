@@ -2,6 +2,39 @@
 
 const axios = require('axios');
 const tools = require('./tools');
+const argv = require('yargs').argv;
+
+const {
+    webPort,
+    usersApiHost,
+    loginApiHost,
+    cashtApiHost,
+    stocktApiHost,
+    stocksApiHost,
+    llmApiHost,
+    llmModel,
+    llmSecurityHost,
+    llmSecurityAppId,
+    aiRag
+} = argv;
+
+async function queryAiRag(query) {
+    try {
+      const response = await axios.post(`http://${aiRag}/v1/ai-rag/chat`, {
+        query: query
+      });
+  
+      // Deconstruct the response into a string
+      const responseData = response.data[0];
+      const deconstructedString = responseData.join('\n');
+  
+      return deconstructedString;
+    } catch (error) {
+      console.error('Error querying AI RAG:', error);
+      throw error;
+    }
+  }
+
 
 class ConversationManager {
     constructor({ systemPrompt, llmApiHost, llmModel, fastify }) {
@@ -21,12 +54,11 @@ class ConversationManager {
     }
 
     addMessage(accountId, message, jwtToken) {
+        const { role, content } = message;
         const conversation = this.getConversation(accountId);
         
-        if (conversation.length === 0) {
-
-            
-
+        if (conversation.length === 0) {            
+                        
             const userSystemPrompt = this.systemPrompt + `
             ## User info and API Keys
             User Account ID: ${accountId}
@@ -35,8 +67,25 @@ class ConversationManager {
             conversation.push({role:'system', content: userSystemPrompt});
             this.log.info(`System prompt added for account ${accountId}`);
         }
-        conversation.push(message);
-        this.log.info(`Message added to conversation for account ${accountId}: ${JSON.stringify(message)}`);
+        
+        
+        if ( role == 'user') {
+            queryAiRag(content).then(ragResult => {
+                message.content = `
+                ## The bellow part enclosed in @@@ has been retirved from a RAG system use it only if you need it
+                @@@
+                ${ragResult}
+                @@@
+                ` + content;
+            }) 
+            conversation.push(message);
+            this.log.info(`Message and RAG added to conversation for account ${accountId}: ${JSON.stringify(message)}`);
+        } else {
+            conversation.push(message);
+            this.log.info(`Message added to conversation for account ${accountId}: ${JSON.stringify(message)}`);
+        }
+        
+        
     }
 
     resetConversation(accountId) {
@@ -56,8 +105,7 @@ class ConversationManager {
         }
 
         this.log.info(`Processing message for account ${accountId} at depth ${depth}: ${newQuestion}`);
-        if (depth === 0) {
-            
+        if (depth === 0) {            
             this.addMessage(accountId, { role: 'user', content: newQuestion }, jwtToken);
         }
         
