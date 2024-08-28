@@ -4,11 +4,14 @@
       v-if="isChatbotAvailable"
       class="ai-chatbot" 
       :class="{ 'ai-chatbot-open': isOpen }"
-      :style="{ bottom: positionY + 'px', right: positionX + 'px' }"
-      @mousedown="startDragging"
-      @touchstart="startDragging"
+      :style="{ 
+        top: chatTop + 'px', 
+        left: chatLeft + 'px', 
+        width: chatWidth + 'px', 
+        height: isOpen ? chatHeight + 'px' : 'auto' 
+      }"
     >
-      <div class="ai-chatbot-header">
+      <div class="ai-chatbot-header" @mousedown="startDragging" @touchstart="startDragging">
         <h3>AI Assistant</h3>
         <div class="ai-chatbot-controls">
           <button v-if="isOpen" @click.stop="handleRestartChat" class="restart-button" title="Restart Chat">
@@ -36,9 +39,14 @@
           </button>
         </div>
       </div>
-      <audio ref="audioAlert" src="@/assets/sounds/notification.wav"></audio>
+      <div 
+        v-if="isOpen" 
+        class="resize-handle" 
+        :class="{ 'resizing': isResizing }"
+        @mousedown="startResizing" 
+        @touchstart="startResizing"
+      ></div>
     </div>
-    <div v-if="highlightResponse" class="full-page-highlight"></div>
   </div>
 </template>
 
@@ -53,16 +61,22 @@ export default {
       isOpen: false,
       userInput: '',
       isDragging: false,
+      isResizing: false,
+      chatTop: window.innerHeight - 420,
+      chatLeft: window.innerWidth - 320,
+      chatWidth: 300,
+      chatHeight: 400,
       startX: 0,
       startY: 0,
-      positionX: 20,
-      positionY: 20,
+      startTop: 0,
+      startLeft: 0,
+      startWidth: 0,
+      startHeight: 0,
       isWaiting: false,
       isChatbotAvailable: false,
       waitingMessages: ['Thinking...', 'AI at work...', 'Making Magic...', 'Abracadabra...', 'Processing...'],
       currentWaitingMessageIndex: 0,
       waitingMessageInterval: null,
-      highlightResponse: false,
       responseTime: 0,
       responseTimeInterval: null
     }
@@ -72,47 +86,43 @@ export default {
   },
   mounted() {
     this.checkChatbotAvailability();
-    window.addEventListener('mousemove', this.onDragging);
-    window.addEventListener('mouseup', this.stopDragging);
-    window.addEventListener('touchmove', this.onDragging);
-    window.addEventListener('touchend', this.stopDragging);
+    document.addEventListener('mousemove', this.onMouseMove);
+    document.addEventListener('mouseup', this.onMouseUp);
+    document.addEventListener('touchmove', this.onTouchMove);
+    document.addEventListener('touchend', this.onTouchEnd);
   },
   beforeDestroy() {
-    window.removeEventListener('mousemove', this.onDragging);
-    window.removeEventListener('mouseup', this.stopDragging);
-    window.removeEventListener('touchmove', this.onDragging);
-    window.removeEventListener('touchend', this.stopDragging);
-    this.clearWaitingMessageInterval();
-    this.clearResponseTimeInterval();
+    document.removeEventListener('mousemove', this.onMouseMove);
+    document.removeEventListener('mouseup', this.onMouseUp);
+    document.removeEventListener('touchmove', this.onTouchMove);
+    document.removeEventListener('touchend', this.onTouchEnd);
   },
   methods: {
     ...mapActions('aiChat', ['sendMessage', 'restartChat']),
     checkChatbotAvailability() {
       this.isChatbotAvailable = user.loggedIn;
       if (this.isChatbotAvailable) {
-        this.$nextTick(() => {
-          this.initChat();
-        });
-      } else {
-        console.log('AI Chatbot is not available. User not logged in.');
+        this.initChat();
       }
     },
     toggleChat(event) {
       event.stopPropagation();
       this.isOpen = !this.isOpen;
+      if (this.isOpen) {
+        this.$nextTick(this.scrollToBottom);
+      }
     },
     async handleSendMessage() {
       if (this.userInput.trim() === '' || this.isWaiting) return;
-      
+
       const sentMessage = this.userInput;
       this.isWaiting = true;
       this.startWaitingMessageRotation();
       this.startResponseTimeCounter();
-      this.userInput = this.waitingMessages[0]; // Set initial waiting message
-      
+      this.userInput = this.waitingMessages[0];
+
       try {
         await this.sendMessage(sentMessage);
-        this.highlightResponseReceived();
       } catch (error) {
         console.error('Error in sending message:', error);
       } finally {
@@ -120,9 +130,7 @@ export default {
         this.userInput = '';
         this.clearWaitingMessageInterval();
         this.clearResponseTimeInterval();
-        this.$nextTick(() => {
-          this.scrollToBottom();
-        });
+        this.$nextTick(this.scrollToBottom);
       }
     },
     startWaitingMessageRotation() {
@@ -133,10 +141,7 @@ export default {
       }, 1000);
     },
     clearWaitingMessageInterval() {
-      if (this.waitingMessageInterval) {
-        clearInterval(this.waitingMessageInterval);
-        this.waitingMessageInterval = null;
-      }
+      clearInterval(this.waitingMessageInterval);
     },
     startResponseTimeCounter() {
       this.responseTime = 0;
@@ -145,26 +150,13 @@ export default {
       }, 1000);
     },
     clearResponseTimeInterval() {
-      if (this.responseTimeInterval) {
-        clearInterval(this.responseTimeInterval);
-        this.responseTimeInterval = null;
-      }
-    },
-    highlightResponseReceived() {
-      this.highlightResponse = true;
-      this.$refs.audioAlert.play();
-      
-      setTimeout(() => {
-        this.highlightResponse = false;
-      }, 1000);
+      clearInterval(this.responseTimeInterval);
     },
     async handleRestartChat() {
       try {
         await user.resetAiChat();
         await this.restartChat();
-        this.$nextTick(() => {
-          this.scrollToBottom();
-        });
+        this.$nextTick(this.scrollToBottom);
       } catch (error) {
         console.error('Error resetting chat:', error);
       }
@@ -178,46 +170,66 @@ export default {
     startDragging(event) {
       if (event.target.closest('.ai-chatbot-header')) {
         this.isDragging = true;
-        const chatbot = this.$el.querySelector('.ai-chatbot');
-        const rect = chatbot.getBoundingClientRect();
-        
-        if (event.type === 'mousedown') {
-          this.startX = event.clientX - rect.left;
-          this.startY = event.clientY - rect.top;
-        } else if (event.type === 'touchstart') {
-          this.startX = event.touches[0].clientX - rect.left;
-          this.startY = event.touches[0].clientY - rect.top;
-        }
-        document.body.style.userSelect = 'none';
+        this.startX = event.clientX || event.touches[0].clientX;
+        this.startY = event.clientY || event.touches[0].clientY;
+        this.startTop = this.chatTop;
+        this.startLeft = this.chatLeft;
+      }
+    },
+    startResizing(event) {
+      event.preventDefault();
+      this.isResizing = true;
+      this.startX = event.clientX || event.touches[0].clientX;
+      this.startY = event.clientY || event.touches[0].clientY;
+      this.startWidth = this.chatWidth;
+      this.startHeight = this.chatHeight;
+      this.startTop = this.chatTop;
+      this.startLeft = this.chatLeft;
+    },
+    onMouseMove(event) {
+      if (this.isDragging) {
+        this.onDragging(event);
+      } else if (this.isResizing) {
+        this.onResizing(event);
+      }
+    },
+    onTouchMove(event) {
+      if (this.isDragging) {
+        this.onDragging(event);
+      } else if (this.isResizing) {
+        this.onResizing(event);
       }
     },
     onDragging(event) {
-      if (!this.isDragging) return;
+      const clientX = event.clientX || event.touches[0].clientX;
+      const clientY = event.clientY || event.touches[0].clientY;
+      const deltaX = clientX - this.startX;
+      const deltaY = clientY - this.startY;
 
-      let clientX, clientY;
-      if (event.type === 'mousemove') {
-        clientX = event.clientX;
-        clientY = event.clientY;
-      } else if (event.type === 'touchmove') {
-        clientX = event.touches[0].clientX;
-        clientY = event.touches[0].clientY;
-      }
-
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-      const chatbot = this.$el.querySelector('.ai-chatbot');
-      const chatbotWidth = chatbot.offsetWidth;
-      const chatbotHeight = chatbot.offsetHeight;
-
-      const newRight = windowWidth - clientX + this.startX - chatbotWidth;
-      const newBottom = windowHeight - clientY + this.startY - chatbotHeight;
-
-      this.positionX = Math.max(0, Math.min(newRight, windowWidth - chatbotWidth));
-      this.positionY = Math.max(0, Math.min(newBottom, windowHeight - chatbotHeight));
+      this.chatLeft = Math.max(0, Math.min(window.innerWidth - this.chatWidth, this.startLeft + deltaX));
+      this.chatTop = Math.max(0, Math.min(window.innerHeight - this.chatHeight, this.startTop + deltaY));
     },
-    stopDragging() {
+    onResizing(event) {
+      const clientX = event.clientX || event.touches[0].clientX;
+      const clientY = event.clientY || event.touches[0].clientY;
+      const deltaX = clientX - this.startX;
+      const deltaY = clientY - this.startY;
+
+      // Calculate new width and height
+      const newWidth = Math.max(300, this.startWidth + deltaX);
+      const newHeight = Math.max(400, this.startHeight + deltaY);
+
+      // Ensure the chatbot doesn't resize beyond the window boundaries
+      this.chatWidth = Math.min(newWidth, window.innerWidth - this.startLeft);
+      this.chatHeight = Math.min(newHeight, window.innerHeight - this.startTop);
+    },
+    onMouseUp() {
       this.isDragging = false;
-      document.body.style.userSelect = '';
+      this.isResizing = false;
+    },
+    onTouchEnd() {
+      this.isDragging = false;
+      this.isResizing = false;
     },
     initChat() {
       this.handleRestartChat();
@@ -234,29 +246,11 @@ export default {
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
   z-index: 1000;
-  transition: all 0.3s ease;
-  will-change: bottom, right;
+  transition: width 0.1s ease, height 0.1s ease;
 }
 
 .ai-chatbot-open {
   height: 400px;
-}
-
-.full-page-highlight {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(76, 175, 80, 0.3);
-  z-index: 9999;
-  animation: fullPageHighlight 1s ease-in-out;
-}
-
-@keyframes fullPageHighlight {
-  0% { opacity: 0; }
-  50% { opacity: 1; }
-  100% { opacity: 0; }
 }
 
 .ai-chatbot-header {
@@ -268,7 +262,6 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  -webkit-user-drag: none;
   user-select: none;
 }
 
@@ -335,5 +328,32 @@ export default {
 .ai-chatbot-input button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
+}
+
+.resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  height: 20px;
+  cursor: se-resize;
+  background-color: #4CAF50;
+  border-radius: 0 0 10px 0;
+  transition: background-color 0.3s ease;
+}
+
+.resize-handle.resizing {
+  background-color: #2196F3;
+}
+
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 5px;
+  height: 5px;
+  background-color: white;
+  box-shadow: 0 -6px 0 0 white, 0 -12px 0 0 white, -6px 0 0 0 white, -12px 0 0 0 white, -6px -6px 0 0 white;
 }
 </style>
