@@ -23,7 +23,10 @@
       <div v-if="isOpen" class="ai-chatbot-body">
         <div class="ai-chatbot-messages" ref="messageContainer">
           <div v-for="(message, index) in conversation" :key="index" :class="['message', message.sender]">
-            {{ message.text }}
+            <template v-if="message.sender === 'user'">
+              {{ message.text }}
+            </template>
+            <vue-markdown v-else class="markdown-body">{{ message.text }}</vue-markdown>
           </div>
         </div>
         <div class="ai-chatbot-input">
@@ -53,9 +56,13 @@
 <script>
 import { mapState, mapActions } from 'vuex';
 import user from '@/api/user';
+import VueMarkdown from 'vue-markdown';
 
 export default {
   name: 'AIChatbot',
+  components: {
+    VueMarkdown
+  },
   data() {
     return {
       isOpen: false,
@@ -355,5 +362,91 @@ export default {
   height: 5px;
   background-color: white;
   box-shadow: 0 -6px 0 0 white, 0 -12px 0 0 white, -6px 0 0 0 white, -12px 0 0 0 white, -6px -6px 0 0 white;
+}
+
+.markdown-body {
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.markdown-body p {
+  margin-bottom: 10px;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.markdown-body code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(27,31,35,0.05);
+  border-radius: 3px;
+}
+
+.markdown-body pre {
+  word-wrap: normal;
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #f6f8fa;
+  border-radius: 3px;
+}
+
+.markdown-body pre code {
+  display: inline;
+  max-width: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  line-height: inherit;
+  word-wrap: normal;
+  background-color: transparent;
+  border: 0;
+}
+
+.markdown-body blockquote {
+  padding: 0 1em;
+  color: #6a737d;
+  border-left: 0.25em solid #dfe2e5;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 2em;
+}
+
+.markdown-body table {
+  display: block;
+  width: 100%;
+  overflow: auto;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 6px 13px;
+  border: 1px solid #dfe2e5;
+}
+
+.markdown-body table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+
+.markdown-body img {
+  max-width: 100%;
+  box-sizing: content-box;
 }
 </style>

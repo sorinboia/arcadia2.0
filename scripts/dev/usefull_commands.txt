@@ -1,5 +1,5 @@
 docker run -dp 27017:27017 sorinboiaf5/arcadia-db:v0.1
 
-repopack frontend/main/src -i "design/**,assets/**,**/ico-landing.vue,**/horizontal-topbar.vue,**/horizontal-menu.js,lending,utility,locales"
+repopack frontend/main/src -i "**/utility/**,**/lending/**,design/**,assets/**,**/ico-landing.vue,**/horizontal-topbar.vue,**/horizontal-menu.js,lending,utility,locales"
 
 repopack backend/ --include "**/index.js" --ignore "**/node_modules/**"
