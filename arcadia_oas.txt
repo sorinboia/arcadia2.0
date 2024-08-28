@@ -1,0 +1,864 @@
+openapi: 3.0.3
+info:
+  title: Crypto Trading Application API
+  version: 1.1.0
+  description: |
+    Comprehensive API for the crypto trading application including AI, login, stock transactions, stocks, and user management.
+    
+    This API allows users to:
+    * Interact with an AI chatbot for trading assistance
+    * Manage user accounts and authentication
+    * Perform stock transactions
+    * Retrieve real-time stock information
+    * Upload and query documents for AI-assisted trading
+  contact:
+    name: API Support
+    url: https://www.example.com/support
+    email: support@example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: /v1
+    description: API server (relative path)
+
+
+tags:
+  - name: AI
+    description: AI chatbot and document querying operations
+  - name: Authentication
+    description: User authentication operations
+  - name: Stocks
+    description: Stock information and transaction operations
+  - name: Users
+    description: User management operations
+
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      description: Check if the API is operational
+      tags:
+        - System
+      responses:
+        '200':
+          description: API is operational
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Ok
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /ai/chat:
+    get:
+      summary: Check AI chat status
+      description: Verify if the AI chat service is available
+      tags:
+        - AI
+      responses:
+        '200':
+          description: AI chat is available
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      summary: Send message to AI chat
+      description: Interact with the AI chatbot for trading assistance
+      tags:
+        - AI
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatMessage'
+      responses:
+        '200':
+          description: Successful response from AI
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /ai/chat/reset:
+    get:
+      summary: Reset AI chat conversation
+      description: Clear the conversation history with the AI chatbot
+      tags:
+        - AI
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Conversation successfully reset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+
+  /ai-rag/:
+      get:
+        summary: Get AI RAG chat interface
+        description: Retrieve an HTML interface for interacting with the AI RAG system
+        tags:
+          - AI
+        responses:
+          '200':
+            description: Successful response with HTML interface
+            content:
+              text/html:
+                schema:
+                  type: string
+          '503':
+            $ref: '#/components/responses/ServiceUnavailable'
+
+  /ai-rag/uploadFiles:
+    post:
+      summary: Upload files for AI RAG
+      description: Upload documents to be processed by the AI for future querying
+      tags:
+        - AI
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Files successfully uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /ai-rag/chat:
+      post:
+        summary: Query AI RAG
+        description: Send a query to the AI to retrieve information from uploaded documents
+        tags:
+          - AI
+        security:
+          - bearerAuth: []
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RAGQuery'
+        responses:
+          '200':
+            description: Successful response with relevant information
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/RAGResponse'
+          '401':
+            $ref: '#/components/responses/UnauthorizedError'
+          '429':
+            $ref: '#/components/responses/TooManyRequests'
+
+  /login:
+    post:
+      summary: User login
+      description: Authenticate a user and receive a JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /stockt/delay/{intensity}:
+    get:
+      summary: Get stock transaction delay
+      description: Calculate a delay factor for stock transactions (for testing purposes)
+      tags:
+        - Stocks
+      parameters:
+        - in: path
+          name: intensity
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: The intensity of the delay calculation
+      responses:
+        '200':
+          description: Successful response with delay factor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DelayResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+
+  /stockt/transactions/{accountId}:
+    get:
+      summary: Get user's stock transactions
+      description: Retrieve a list of stock transactions for a specific user
+      tags:
+        - Stocks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          schema:
+            type: string
+          description: The account ID of the user
+      responses:
+        '200':
+          description: Successful response with transaction history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockTransaction'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /stockt:
+    post:
+      summary: Make a stock transaction
+      description: Execute a buy or sell stock transaction
+      tags:
+        - Stocks
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewStockTransaction'
+      responses:
+        '200':
+          description: Successful transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockTransactionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          description: Insufficient funds or stocks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /stock/ticker/{symbol}:
+    get:
+      summary: Get stock ticker information
+      description: Retrieve current ticker information for a specific stock or all stocks
+      tags:
+        - Stocks
+      parameters:
+        - in: path
+          name: symbol
+          required: true
+          schema:
+            type: string
+          description: The stock symbol or 'all' for all stocks
+      responses:
+        '200':
+          description: Successful response with ticker information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockTicker'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /stock/candles/{symbol}:
+    get:
+      summary: Get stock candles information
+      description: Retrieve candlestick data for a specific stock or all stocks
+      tags:
+        - Stocks
+      parameters:
+        - in: path
+          name: symbol
+          required: true
+          schema:
+            type: string
+          description: The stock symbol or 'all' for all stocks
+      responses:
+        '200':
+          description: Successful response with candles information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockCandles'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /user/{accountId}:
+    get:
+      summary: Get user data
+      description: Retrieve detailed information about a specific user
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          schema:
+            type: string
+          description: The account ID of the user
+      responses:
+        '200':
+          description: Successful response with user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /user:
+    post:
+      summary: Create a new user
+      description: Register a new user account
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        '201':
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      summary: Update user data
+      description: Modify information for the authenticated user
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUser'
+      responses:
+        '200':
+          description: User data successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /user_i/{email}:
+    get:
+      summary: Get user data by email (internal)
+      description: Retrieve user information using a base64 encoded email (for internal use only)
+      tags:
+        - Users
+      parameters:
+        - in: path
+          name: email
+          required: true
+          schema:
+            type: string
+            format: byte
+          description: Base64 encoded email address
+      responses:
+        '200':
+          description: Successful response with user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /user/email/{email}:
+    get:
+      summary: Get account ID from email
+      description: Retrieve the account ID associated with an email address
+      tags:
+        - Users
+      parameters:
+        - in: path
+          name: email
+          required: true
+          schema:
+            type: string
+            format: email
+          description: The email address of the user
+      responses:
+        '200':
+          description: Successful response with account ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ChatMessage:
+      type: object
+      required:
+        - newQuestion
+      properties:
+        newQuestion:
+          type: string
+          description: The user's message to the AI chatbot
+
+    ChatResponse:
+      type: object
+      required:
+        - status
+        - reply
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+        reply:
+          type: string
+          description: The AI's response to the user's message
+
+    RAGQuery:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: The user's query for the AI RAG system
+
+    RAGResponse:
+      type: array
+      items:
+        type: string
+      description: Relevant information retrieved from uploaded documents
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      required:
+        - status
+        - accountId
+        - name
+        - jwt
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+        accountId:
+          type: string
+        name:
+          type: string
+        cash:
+          type: number
+          format: float
+        stocks:
+          type: object
+          additionalProperties:
+            type: number
+        picture:
+          type: string
+          format: uri
+        jwt:
+          type: string
+
+    User:
+      type: object
+      required:
+        - accountId
+        - email
+        - name
+      properties:
+        accountId:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        cash:
+          type: number
+          format: float
+        stocks:
+          type: object
+          additionalProperties:
+            type: number
+        picture:
+          type: string
+          format: uri
+
+    NewUser:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        picture:
+          type: string
+          format: uri
+        cash:
+          type: number
+          format: float
+        stocks:
+          type: object
+          additionalProperties:
+            type: number
+
+    UpdateUser:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        picture:
+          type: string
+          format: uri
+        cash:
+          type: number
+          format: float
+        password:
+          type: string
+          format: password
+        stocks:
+          type: object
+          additionalProperties:
+            type: number
+
+    StockTransaction:
+      type: object
+      required:
+        - transactionId
+        - symbol
+        - transactionType
+        - amount
+        - price
+        - date
+      properties:
+        transactionId:
+          type: string
+          format: uuid
+        symbol:
+          type: string
+          example: BTC
+        transactionType:
+          type: string
+          enum: [buy, sell]
+        amount:
+          type: number
+          format: float
+        price:
+          type: number
+          format: float
+        date:
+          type: string
+          format: date-time
+
+    NewStockTransaction:
+      type: object
+      required:
+        - symbol
+        - amount
+        - transactionType
+      properties:
+        symbol:
+          type: string
+          example: BTC
+        amount:
+          type: number
+          format: float
+          minimum: 0.000001
+        transactionType:
+          type: string
+          enum: [buy, sell]
+
+    StockTransactionResponse:
+      type: object
+      required:
+        - status
+        - transactionId
+        - accountId
+        - symbol
+        - transactionType
+        - amount
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+        transactionId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+        symbol:
+          type: string
+          example: BTC
+        transactionType:
+          type: string
+          enum: [buy, sell]
+        amount:
+          type: number
+          format: float
+
+    StockTicker:
+      type: object
+      properties:
+        btc:
+          $ref: '#/components/schemas/TickerData'
+        eth:
+          $ref: '#/components/schemas/TickerData'
+        ltc:
+          $ref: '#/components/schemas/TickerData'
+
+    TickerData:
+      type: object
+      required:
+        - ticker
+      properties:
+        ticker:
+          type: object
+          required:
+            - ask
+            - bid
+          properties:
+            ask:
+              type: number
+              format: float
+            bid:
+              type: number
+              format: float
+
+    StockCandles:
+      type: object
+      properties:
+        btc:
+          $ref: '#/components/schemas/CandleData'
+        eth:
+          $ref: '#/components/schemas/CandleData'
+        ltc:
+          $ref: '#/components/schemas/CandleData'
+
+    CandleData:
+      type: array
+      items:
+        type: object
+        required:
+          - timestamp
+          - open
+          - high
+          - low
+          - close
+          - volume
+        properties:
+          timestamp:
+            type: integer
+            format: int64
+          open:
+            type: number
+            format: float
+          high:
+            type: number
+            format: float
+          low:
+            type: number
+            format: float
+          close:
+            type: number
+            format: float
+          volume:
+            type: number
+            format: float
+
+    SuccessResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [success]
+
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          enum: [error]
+        message:
+          type: string
+
+    UploadResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: Files added to database successfully
+
+    DelayResponse:
+      type: object
+      required:
+        - result
+      properties:
+        result:
+          type: integer
+          description: The calculated delay factor
+
+  responses:
+    BadRequestError:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    UnauthorizedError:
+      description: Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ForbiddenError:
+      description: The server understood the request but refuses to authorize it
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFoundError:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    TooManyRequests:
+      description: Too many requests, please try again later
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ServiceUnavailable:
+      description: Service is currently unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'          

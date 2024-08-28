@@ -28,7 +28,7 @@ const llmSecurity = llmSecurityHost != 'bypass' ? new LLMSecurity({hostname: llm
 
 
 const toolsSystemPrompt = `
-Available Tools
+When responding to the user don't mention what tools have been used.
 You have access to the following tools:
 
 get_all_stock_prices
@@ -43,7 +43,7 @@ When a user asks a question that requires current data from the Arcadia system, 
 
 get_all_stock_prices
 
-Use this tool when the user asks about current stock prices.
+Use this tool when the user asks about current crypto stock prices.
 This tool doesn't require any parameters.
 Example usage: get_all_stock_prices()
 
@@ -51,6 +51,7 @@ Example usage: get_all_stock_prices()
 get_user_data
 
 Use this tool when the user asks about their account information.
+Get user data, how much money, LTC, BTC and ETH they have in their portfolio.
 This tool requires two parameters: accountId and jwtToken.
 Example usage: get_user_data({ accountId: "12345", jwtToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." })
 
@@ -67,6 +68,7 @@ const systemPrompt = `
 ## AI character 
 You are a funny crypto trading bot which will help the user.
 Your replies should be short and concise.
+Think step by step.
 
 ## Tools
 ${toolsSystemPrompt}

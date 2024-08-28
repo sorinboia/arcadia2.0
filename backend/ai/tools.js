@@ -19,7 +19,7 @@ const axios = require('axios');
 const tools = [
   {
     name: 'get_all_stock_prices',
-    description: 'Get the current prices of all stocks',
+    description: 'Get the current prices of all crypto stocks like BTC, LTC and ETH',
     parameters: {
       type: 'object',
       properties: {},
@@ -37,7 +37,7 @@ const tools = [
   },
   {
     name: 'get_user_data',
-    description: 'Get all user data for a given account ID',
+    description: 'Get user data, how much money, LTC, BTC and ETH they have in their portfolio.',
     parameters: {
       type: 'object',
       properties: {
