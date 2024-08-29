@@ -88,6 +88,12 @@ class User {
         const result = await this.axios.get('/v1/ai/chat/reset');
         return result.data;
     }
+
+    async regenerateLastResponse() {
+        const result = await this.axios.post('/v1/ai/chat/regen');
+        return result.data;
+    }
+      
         
 }
 

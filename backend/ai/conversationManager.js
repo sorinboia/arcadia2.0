@@ -147,6 +147,33 @@ class ConversationManager {
             return responseMessage.content;
         }
     }
+
+    async regenerateLastResponse(accountId, jwtToken) {
+        const conversation = this.getConversation(accountId);
+        if (conversation.length < 2) {
+            throw new Error('Not enough messages to regenerate');
+        }
+    
+        // Remove the last assistant message
+        conversation.pop();
+    
+        // Remove all 'tool' messages until we reach a 'user' message
+        while (conversation.length > 0 && conversation[conversation.length - 1].role !== 'user') {
+            conversation.pop();
+        }            
+
+        if (conversation.length === 0) {
+            throw new Error('No user message found to regenerate from');
+        }
+    
+        // Get the last user message
+        const lastUserMessage = conversation[conversation.length - 1].content;
+        conversation.pop();
+        // Process the message again
+        return this.processMessage(accountId, lastUserMessage, 0, jwtToken);
+    }
+    
+      
 }
 
 module.exports = ConversationManager;

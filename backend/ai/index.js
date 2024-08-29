@@ -153,6 +153,51 @@ fastify.route({
     }
 });
 
+fastify.route({
+    method: 'POST',
+    url: `/${API_VERSION}/ai/chat/regen`,
+    preValidation: [fastify.authenticate],
+    handler: async (request, reply) => {
+      const authorization = request.headers.authorization;
+      let accountId;
+      if (request.headers['okta-user']) {
+        accountId = (await axios.get(`http://${usersApiHost}/v1/user/email/${request.user.sub}`, {
+          headers: {
+            authorization,
+            ...openTracingHeaders(request.headers)
+          }
+        })).data.accountId;
+      } else {
+        accountId = request.user.sub;
+      }
+  
+      try {
+        const jwtToken = authorization.split(' ')[1];
+        const responseContent = await conversationManager.regenerateLastResponse(accountId, jwtToken);
+  
+        if (llmSecurity) {
+          try {
+            const secCheck = await llmSecurity.protect({response: responseContent, systemPrompt: conversationManager.getConversation(accountId).systemPrompt, user: accountId});
+            if (!secCheck.passed) {
+              fastify.log.info(`Sec LLM results ${JSON.stringify(secCheck.result)}`);
+              return ({ status: 'success', reply: 'I can not do that' });
+            }
+          } catch (error) {
+            fastify.log.error('LLM Security check failed:', error);
+            return reply.code(403).send({ status: 'error', message: 'Security check failed' });
+          }
+        }
+  
+        return { status: 'success', reply: responseContent };
+      } catch (error) {
+        fastify.log.error(`Error regenerating last response: ${error}`);
+        return reply.code(500).send({ status: 'error', message: 'An error occurred while regenerating the last response' });
+      }
+    }
+  });
+  
+
+
 // Ask AI
 fastify.route({
     method: 'POST',

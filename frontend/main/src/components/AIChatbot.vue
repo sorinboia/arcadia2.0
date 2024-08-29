@@ -26,8 +26,19 @@
             <template v-if="message.sender === 'user'">
               {{ message.text }}
             </template>
-            <vue-markdown v-else class="markdown-body">{{ message.text }}</vue-markdown>
+            <div v-else class="bot-message">
+              <vue-markdown class="markdown-body">{{ message.text }}</vue-markdown>
+              <button 
+                v-if="index === conversation.length - 1 && message.sender === 'bot' && index > 0" 
+                @click="handleRegenerateLastResponse" 
+                class="regenerate-button" 
+                title="Regenerate response"
+              >
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
           </div>
+
         </div>
         <div class="ai-chatbot-input">
           <input 
@@ -111,7 +122,37 @@ export default {
     document.removeEventListener('touchend', this.onTouchEnd);
   },
   methods: {
-    ...mapActions('aiChat', ['sendMessage', 'restartChat']),
+    ...mapActions('aiChat', ['sendMessage', 'restartChat', 'regenerateLastResponse']),
+    async handleRegenerateLastResponse() {
+      if (this.conversation.length < 2 || this.isWaiting) return;
+
+      this.setWaitingState();
+
+      try {
+        await this.$store.dispatch('aiChat/regenerateLastResponse');
+        this.playNotificationSound();
+      } catch (error) {
+        console.error('Error regenerating response:', error);
+      } finally {
+        this.clearWaitingState();
+      }
+    },
+
+    setWaitingState() {
+      this.isWaiting = true;
+      this.startWaitingMessageRotation();
+      this.startResponseTimeCounter();
+      this.userInput = this.waitingMessages[0];
+    },
+
+    clearWaitingState() {
+      this.isWaiting = false;
+      this.userInput = '';
+      this.clearWaitingMessageInterval();
+      this.clearResponseTimeInterval();
+      this.$nextTick(this.scrollToBottom);
+    },
+
     checkChatbotAvailability() {
       this.isChatbotAvailable = user.loggedIn;
       if (this.isChatbotAvailable) {
@@ -129,10 +170,7 @@ export default {
       if (this.userInput.trim() === '' || this.isWaiting) return;
 
       const sentMessage = this.userInput;
-      this.isWaiting = true;
-      this.startWaitingMessageRotation();
-      this.startResponseTimeCounter();
-      this.userInput = this.waitingMessages[0];
+      this.setWaitingState();
 
       try {
         await this.sendMessage(sentMessage);
@@ -140,11 +178,7 @@ export default {
       } catch (error) {
         console.error('Error in sending message:', error);
       } finally {
-        this.isWaiting = false;
-        this.userInput = '';
-        this.clearWaitingMessageInterval();
-        this.clearResponseTimeInterval();
-        this.$nextTick(this.scrollToBottom);
+        this.clearWaitingState();
       }
     },
     startWaitingMessageRotation() {
@@ -460,5 +494,29 @@ export default {
   max-width: 100%;
   box-sizing: content-box;
 }
+
+.bot-message {
+  position: relative;
+  padding-right: 30px; /* Add some padding to the right to accommodate the button */
+}
+
+.regenerate-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: none;
+  border: none;
+  color: #4CAF50;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+  padding: 2px;
+}
+
+.regenerate-button:hover {
+  opacity: 1;
+}
+
 </style>
 
