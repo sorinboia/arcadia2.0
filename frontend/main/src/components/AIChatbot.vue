@@ -49,9 +49,15 @@
         @mousedown="startResizing" 
         @touchstart="startResizing"
       ></div>
+    <audio ref="notificationSound" preload="auto">
+      <source src="@/assets/sounds/notification.wav" type="audio/mpeg">
+    </audio>
     </div>
   </div>
 </template>
+
+
+
 
 <script>
 import { mapState, mapActions } from 'vuex';
@@ -130,6 +136,7 @@ export default {
 
       try {
         await this.sendMessage(sentMessage);
+        this.playNotificationSound();
       } catch (error) {
         console.error('Error in sending message:', error);
       } finally {
@@ -240,7 +247,11 @@ export default {
     },
     initChat() {
       this.handleRestartChat();
-    }
+    },
+    playNotificationSound() {
+    this.$refs.notificationSound.play();
+  }
+
   }
 }
 </script>
@@ -450,3 +461,4 @@ export default {
   box-sizing: content-box;
 }
 </style>
+
