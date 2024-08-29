@@ -35,6 +35,7 @@ class User {
                 const { status, accountId, name, cash, jwt } = response.data;
 
                 if (status == 'success') {
+                    this.loggedIn = true;
                     this.accountId = accountId;
                     this.name = name;
                     this.cash = cash;

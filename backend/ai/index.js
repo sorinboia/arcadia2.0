@@ -173,6 +173,7 @@ fastify.route({
         }
         
         const { newQuestion } = request.body;
+        const { systemPrompt } = conversationManager.getConversation(accountId);
 
         if (llmSecurity) {
             try {                
