@@ -3,6 +3,8 @@
 const axios = require('axios');
 const tools = require('./tools');
 const argv = require('yargs').argv;
+const { systemPrompt } = require('./systemPrompt');
+
 
 const {
     webPort,
@@ -37,7 +39,7 @@ async function queryAiRag(query) {
 
 
 class ConversationManager {
-    constructor({ systemPrompt, llmApiHost, llmModel, fastify }) {
+    constructor({ llmApiHost, llmModel, fastify }) {
         this.systemPrompt = systemPrompt;
         this.conversations = new Map();
         this.llmApiHost = llmApiHost;
@@ -123,7 +125,7 @@ class ConversationManager {
         const responseMessage = llmResponse.data.message;
 
         if (responseMessage.tool_calls) {
-            this.log.info(`Function call(s) detected for account ${accountId}`);
+            this.log.info(`Function call(s) detected for account ${accountId} tool calls ${responseMessage.tool_calls}`);
             for (const toolCall of responseMessage.tool_calls) {
                 const tool = tools.find(t => t.name === toolCall.function.name);
 
