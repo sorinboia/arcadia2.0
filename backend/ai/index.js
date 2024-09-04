@@ -172,6 +172,24 @@ fastify.route({
     }
 });
 
+fastify.route({
+    method: 'POST',
+    url: `/${API_VERSION}/ai/security-config`,
+    
+    handler: async (request, reply) => {
+        try {
+            const { llmSecurityHost, llmSecurityAppId } = request.body; // You may need to validate these inputs.
+            await conversationManager.setSecurityConfig({ llmSecurityHost, llmSecurityAppId });
+            return reply.send({ status: 'success', message: 'Security configuration updated successfully' });
+        } catch (error) {
+            fastify.log.error(`Error updating security configuration: ${error}`);
+            return reply.code(500).send({ status: 'error', message: 'An error occurred while updating the security configuration' });
+        }
+    }
+});
+
+
+
 const start = async () => {
     try {    
         await fastify.listen(webPort || 3000,'0.0.0.0');

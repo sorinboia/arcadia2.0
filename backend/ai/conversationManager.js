@@ -47,7 +47,16 @@ class ConversationManager {
         this.llmModel = llmModel;
         this.log = fastify.log;
          
-        this.llmSecurity = llmSecurityAppId != 'bypass' ? new LLMSecurity({hostname: llmSecurityHost, appId: llmSecurityAppId }) : null;
+        this.llmSecurity = null;
+    }
+
+    async setSecurityConfig({ llmSecurityHost, llmSecurityAppId }) {
+        if ( llmSecurityHost && llmSecurityAppId ) {
+            this.llmSecurity = new LLMSecurity({hostname: llmSecurityHost, appId: llmSecurityAppId});
+            return ({ status: 'success', message: 'AI Security enabled' });
+        } else {
+            return ({ status: 'error', message: 'Credentials not provided' });
+        }
     }
 
     getConversation(accountId) {
