@@ -4,6 +4,7 @@ const axios = require('axios');
 const tools = require('./tools');
 const argv = require('yargs').argv;
 const { systemPrompt } = require('./systemPrompt');
+const LLMSecurity = require('./llmsecurity');
 
 
 const {
@@ -45,6 +46,8 @@ class ConversationManager {
         this.llmApiHost = llmApiHost;
         this.llmModel = llmModel;
         this.log = fastify.log;
+         
+        this.llmSecurity = llmSecurityAppId != 'bypass' ? new LLMSecurity({hostname: llmSecurityHost, appId: llmSecurityAppId }) : null;
     }
 
     getConversation(accountId) {
@@ -55,39 +58,22 @@ class ConversationManager {
         return this.conversations.get(accountId);
     }
 
-    addMessage(accountId, message, jwtToken) {
-        const { role, content } = message;
+    addMessage(accountId, message, jwtToken) {        
         const conversation = this.getConversation(accountId);
         
         if (conversation.length === 0) {            
                         
-            const userSystemPrompt = this.systemPrompt + `
-            ## User info and API Keys
-            User Account ID: ${accountId}
-            JWT Token Base64 format: ${jwtToken}
-            `
+            const userSystemPrompt = this.systemPrompt + '\n' +
+                '## User info and API Keys\n' +
+                'User Account ID:'+ accountId + '\n' +
+                'JWT Token Base64 format:'+ jwtToken + '\n'; 
+
             conversation.push({role:'system', content: userSystemPrompt});
             this.log.info(`System prompt added for account ${accountId}`);
         }
-        
-        
-        if ( role == 'user') {
-            queryAiRag(content).then(ragResult => {
-                message.content = `
-                ## The bellow part enclosed in @@@ has been retirved from a RAG system use it only if you need it
-                @@@
-                ${ragResult}
-                @@@
-                ` + content;
-            }) 
-            conversation.push(message);
-            this.log.info(`Message and RAG added to conversation for account ${accountId}: ${JSON.stringify(message)}`);
-        } else {
-            conversation.push(message);
-            this.log.info(`Message added to conversation for account ${accountId}: ${JSON.stringify(message)}`);
-        }
-        
-        
+        this.log.info(`Adding message ${JSON.stringify(message)}`);
+        conversation.push(message);
+                    
     }
 
     resetConversation(accountId) {
@@ -100,17 +86,58 @@ class ConversationManager {
         return Object.fromEntries(this.conversations);
     }
 
-    async processMessage(accountId, newQuestion, depth = 0, jwtToken) {
+    async processMessage(accountId, newQuestion, depth = 0, jwtToken, regen = false) {
+        
+        const userSystemPrompt = this.systemPrompt + '\n' +
+           '## User info and API Keys\n' +
+           'User Account ID:'+ accountId + '\n' +
+           'JWT Token Base64 format:'+ jwtToken + '\n';            
+
         if (depth > 5) {
             this.log.warn(`Maximum call depth reached for account ${accountId}. Stopping recursion.`);
-            return "I apologize, but I'm having trouble processing your request. Could you please rephrase your question?";
+            return ({ status: 'success', message: 'Endless function calling, rephrase your message.' });
         }
 
         this.log.info(`Processing message for account ${accountId} at depth ${depth}: ${newQuestion}`);
-        if (depth === 0) {            
-            this.addMessage(accountId, { role: 'user', content: newQuestion }, jwtToken);
-        }
+        if (depth === 0) {    
+            
         
+            if (regen) {
+                newQuestion = newQuestion.split('User question: ')[1].trim();
+            } 
+            
+            const ragResult = await queryAiRag(newQuestion);
+                                    
+            const newQuestionPlusRag = '\n' +
+                '## The bellow part enclosed in @@@ has been retirved from a RAG system use it only if you need it\n' +
+                '@@@\n' + 
+                ragResult +
+                '\n@@@\n\n' + 
+                'User question: ' + newQuestion;                                            
+                          
+
+            this.addMessage(accountId, { role: 'user', content: newQuestionPlusRag }, jwtToken);
+
+            
+            if (this.llmSecurity) {
+                try { 
+                                   
+                    const secCheck = await this.llmSecurity.protect({prompt: newQuestion, systemPrompt: userSystemPrompt, user:accountId });                
+                    this.log.info(`Prompt security check result ${JSON.stringify(secCheck)}`)
+                    if (!secCheck.passed) {                    
+                        this.log.info(`Sec LLM results ${JSON.stringify(secCheck.result)}`);
+                        return ({ status: 'success', reply: 'Prompt security check failed' });
+                    }
+                } catch (error) {
+                    this.log.error('LLM Security check failed:', error);
+                    return ({ status: 'error', message: 'Issue to verify security' });
+                }
+            }
+
+        }  
+            
+        
+                    
         const dataForLlm = {
             model: this.llmModel,            
             messages: this.getConversation(accountId),
@@ -125,41 +152,67 @@ class ConversationManager {
         const responseMessage = llmResponse.data.message;
 
         if (responseMessage.tool_calls) {
-            this.log.info(`Function call(s) detected for account ${accountId} tool calls ${responseMessage.tool_calls}`);
+            this.log.info(`Function call(s) detected for account ${accountId} tool calls ${JSON.stringify(responseMessage.tool_calls)}`);
             for (const toolCall of responseMessage.tool_calls) {
+                
                 const tool = tools.find(t => t.name === toolCall.function.name);
 
+                
+                
                 if (tool) {
                     this.log.info(`Executing function ${toolCall.function.name} for account ${accountId}`);
                     const result = await tool.function(toolCall.function.arguments);
+                    this.log.info(`Function response ${toolCall.function.name} is ${JSON.stringify(result)}`);
                     this.addMessage(accountId, {
                         role: 'tool',
                         content: JSON.stringify(result),
                         tool_call_id: toolCall.function.name
                     });
                     this.log.info(`Function ${toolCall.function.name} executed for account ${accountId} with data -> ${JSON.stringify(result)}`);
+                } else {
+                    this.log.info(`Calling non existing tool ${JSON.stringify(toolCall)}`);
+                    this.addMessage(accountId, {
+                        role: 'tool',
+                        content: 'The tool you are calling does not exist',
+                        tool_call_id: toolCall.function.name
+                    });
                 }
             }
 
             this.log.info(`Recursively calling processMessage for account ${accountId}`);
             return this.processMessage(accountId, "", depth + 1);
         } else {
+
+            if (this.llmSecurity) {
+                try {                
+                    const secCheck = await this.llmSecurity.protect({response: responseMessage.content, systemPrompt: userSystemPrompt, user:accountId });                
+                    this.log.info(`Response security check result ${JSON.stringify(secCheck)}`)
+                    if (!secCheck.passed) {                    
+                        this.log.info(`Sec LLM results ${JSON.stringify(secCheck.result)}`);
+                        return ({ status: 'success', reply: 'Response security check failed.' });
+                    }
+                } catch (error) {
+                    this.log.error('LLM Security check failed:', error);
+                    return reply.code(403).send({ status: 'error', message: 'Issue to verify security' });
+                }
+            }
+
             this.log.info(`Adding assistant response for account ${accountId}`);
             this.addMessage(accountId, { role: 'assistant', content: responseMessage.content });
-            return responseMessage.content;
+            return ({ status: 'success', reply: responseMessage.content });
+            
         }
     }
 
     async regenerateLastResponse(accountId, jwtToken) {
         const conversation = this.getConversation(accountId);
+        
         if (conversation.length < 2) {
             throw new Error('Not enough messages to regenerate');
         }
     
-        // Remove the last assistant message
-        conversation.pop();
     
-        // Remove all 'tool' messages until we reach a 'user' message
+        // Remove all 'tool' and 'assistant 'messages until we reach a 'user' message
         while (conversation.length > 0 && conversation[conversation.length - 1].role !== 'user') {
             conversation.pop();
         }            
@@ -172,7 +225,7 @@ class ConversationManager {
         const lastUserMessage = conversation[conversation.length - 1].content;
         conversation.pop();
         // Process the message again
-        return this.processMessage(accountId, lastUserMessage, 0, jwtToken);
+        return this.processMessage(accountId, lastUserMessage, 0, jwtToken, true);
     }
     
       

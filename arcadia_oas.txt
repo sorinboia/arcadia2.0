@@ -88,10 +88,35 @@ paths:
         '429':
           $ref: '#/components/responses/TooManyRequests'
 
+  /ai/chat/regen:
+    post:
+      summary: Regenerate last AI response
+      description: Regenerate the last response from the AI chatbot
+      tags:
+        - AI
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful regeneration of last response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
   /ai/chat/reset:
     get:
       summary: Reset AI chat conversation
-      description: Clear the conversation history with the AI chatbot
+      description: Clear the conversation history with the AI chatbot for the authenticated user
       tags:
         - AI
       security:
@@ -105,6 +130,7 @@ paths:
                 $ref: '#/components/schemas/SuccessResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
 
 
   /ai-rag/:
@@ -129,8 +155,6 @@ paths:
       description: Upload documents to be processed by the AI for future querying
       tags:
         - AI
-      security:
-        - bearerAuth: []
       requestBody:
         content:
           multipart/form-data:
@@ -160,8 +184,6 @@ paths:
         description: Send a query to the AI to retrieve information from uploaded documents
         tags:
           - AI
-        security:
-          - bearerAuth: []
         requestBody:
           required: true
           content:
@@ -179,6 +201,32 @@ paths:
             $ref: '#/components/responses/UnauthorizedError'
           '429':
             $ref: '#/components/responses/TooManyRequests'
+            
+  /ai-rag/{file}:
+    get:
+      summary: Serve static files for AI RAG interface
+      description: Serve CSS and JS files for the AI RAG interface
+      tags:
+        - AI
+      parameters:
+        - in: path
+          name: file
+          required: true
+          schema:
+            type: string
+          description: The name of the CSS or JS file to serve
+      responses:
+        '200':
+          description: Successful response with the requested file
+          content:
+            text/css:
+              schema:
+                type: string
+            application/javascript:
+              schema:
+                type: string
+        '404':
+          $ref: '#/components/responses/NotFoundError'            
 
   /login:
     post:

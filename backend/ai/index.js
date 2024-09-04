@@ -3,7 +3,7 @@ const argv = require('yargs').argv;
 const fastify = require('fastify')({ logger: true });
 const axios = require('axios');
 const fp = require("fastify-plugin");
-const LLMSecurity = require('./llmsecurity');
+
 const ConversationManager = require('./conversationManager');
 
 
@@ -24,7 +24,7 @@ const {
 
 const API_VERSION = 'v1';
 
-const llmSecurity = llmSecurityHost != 'bypass' ? new LLMSecurity({hostname: llmSecurityHost, appId: llmSecurityAppId }) : null;
+
 
 
 
@@ -126,21 +126,8 @@ fastify.route({
       try {
         const jwtToken = authorization.split(' ')[1];
         const responseContent = await conversationManager.regenerateLastResponse(accountId, jwtToken);
-  
-        if (llmSecurity) {
-          try {
-            const secCheck = await llmSecurity.protect({response: responseContent, systemPrompt: conversationManager.getConversation(accountId).systemPrompt, user: accountId});
-            if (!secCheck.passed) {
-              fastify.log.info(`Sec LLM results ${JSON.stringify(secCheck.result)}`);
-              return ({ status: 'success', reply: 'I can not do that' });
-            }
-          } catch (error) {
-            fastify.log.error('LLM Security check failed:', error);
-            return reply.code(403).send({ status: 'error', message: 'Security check failed' });
-          }
-        }
-  
-        return { status: 'success', reply: responseContent };
+            
+        return responseContent;
       } catch (error) {
         fastify.log.error(`Error regenerating last response: ${error}`);
         return reply.code(500).send({ status: 'error', message: 'An error occurred while regenerating the last response' });
@@ -170,41 +157,14 @@ fastify.route({
         }
         
         const { newQuestion } = request.body;
-        const { systemPrompt } = conversationManager.getConversation(accountId);
-
-        if (llmSecurity) {
-            try {                
-                const secCheck = await llmSecurity.protect({prompt: newQuestion, systemPrompt: systemPrompt, user:accountId });                
-                if (!secCheck.passed) {                    
-                    fastify.log.info(`Sec LLM results ${JSON.stringify(secCheck.result)}`);
-                    return ({ status: 'success', reply: 'I can not do that' });
-                }
-            } catch (error) {
-                fastify.log.error('LLM Security check failed:', error);
-                return reply.code(403).send({ status: 'error', message: 'Security check failed' });
-            }
-        }
-
+        
         try {
 
             const jwtToken = authorization.split(' ')[1];
             const responseContent = await conversationManager.processMessage(accountId, newQuestion, undefined , jwtToken);
             
-            if (llmSecurity) {
-                try {                
-                    const secCheck = await llmSecurity.protect({response: responseContent, systemPrompt: systemPrompt, user:accountId });                
-                    
-                    if (!secCheck.passed) {                    
-                        fastify.log.info(`Sec LLM results ${JSON.stringify(secCheck.result)}`);
-                        return ({ status: 'success', reply: 'I can not do that' });
-                    }
-                } catch (error) {
-                    fastify.log.error('LLM Security check failed:', error);
-                    return reply.code(403).send({ status: 'error', message: 'Security check failed' });
-                }
-            }
 
-            return { status: 'success', reply: responseContent };
+            return responseContent;
         } catch (error) {
             fastify.log.error(`Error processing message: ${error}` );
             return reply.code(500).send({ status: 'error', message: 'An error occurred while processing your request' });

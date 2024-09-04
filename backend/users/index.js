@@ -55,8 +55,7 @@ fastify.route({
     url: `/${API_VERSION}/user/:accountId`,
     preValidation: [fastify.authenticate],
     handler: async (request,reply) => {
-        console.log('HEADERS USERS',request.headers);
-
+        
         const  { accountId, email, name, cash, stocks } = await User.findOne({ accountId : request.params.accountId});
 
         return { status: 'success',accountId, email, name, cash, stocks };

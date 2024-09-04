@@ -21,6 +21,7 @@ class LLMSecurity {
             });
 
             let passed = true; 
+            
             passed = result.data.result.prompt != null ? (passed = result.data.result.prompt.passed) : passed;
             passed = result.data.result.response != null ? (passed = result.data.result.response.passed) : passed;
                                        
