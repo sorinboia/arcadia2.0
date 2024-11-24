@@ -1,6 +1,12 @@
 // conversationManager.js
 
 const axios = require('axios');
+
+axios.defaults.validateStatus = function (status) {
+    return (status >= 200 && status < 300) || 
+           status === 422 
+};
+
 const tools = require('./tools');
 const argv = require('yargs').argv;
 const { systemPrompt } = require('./systemPrompt');
@@ -67,18 +73,31 @@ class ConversationManager {
         return this.conversations.get(accountId);
     }
 
-    addMessage(accountId, message, jwtToken) {        
+    addMessage(accountId, message, jwtToken, ragData) {        
         const conversation = this.getConversation(accountId);
         
-        if (conversation.length === 0) {            
-                        
-            const userSystemPrompt = this.systemPrompt + '\n' +
-                '## User info and API Keys\n' +
-                'User Account ID:'+ accountId + '\n' +
-                'JWT Token Base64 format:'+ jwtToken + '\n'; 
+        const userSystemPrompt = this.systemPrompt + '\n' +
+            '## User info and API Keys\n' +
+            'User Account ID:'+ accountId + '\n' +
+            'JWT Token Base64 format:'+ jwtToken + '\n\n' +
+            '## The bellow part enclosed in @@@ has been retirved from a RAG system use it only if you need it\n' +
+            '@@@\n' + 
+            ragData +
+            '\n@@@'
 
+        if (conversation.length === 0) {                                    
             conversation.push({role:'system', content: userSystemPrompt});
             this.log.info(`System prompt added for account ${accountId}`);
+        } else if ( message.role != 'tool') {
+            conversation[0] = {
+                role:'system',
+                content: userSystemPrompt + '\n' +
+                '## The bellow part enclosed in @@@ has been retirved from a RAG system use it only if you need it\n' +
+                '@@@\n' + 
+                ragData +
+                '\n@@@'
+            }
+
         }
         this.log.info(`Adding message ${JSON.stringify(message)}`);
         conversation.push(message);
@@ -97,10 +116,10 @@ class ConversationManager {
 
     async processMessage(accountId, newQuestion, depth = 0, jwtToken, regen = false) {
         
-        const userSystemPrompt = this.systemPrompt + '\n' +
+        let userSystemPrompt = this.systemPrompt + '\n' +
            '## User info and API Keys\n' +
            'User Account ID:'+ accountId + '\n' +
-           'JWT Token Base64 format:'+ jwtToken + '\n';            
+           'JWT Token Base64 format:'+ jwtToken           
 
         if (depth > 5) {
             this.log.warn(`Maximum call depth reached for account ${accountId}. Stopping recursion.`);
@@ -111,21 +130,21 @@ class ConversationManager {
         if (depth === 0) {    
             
         
-            if (regen) {
-                newQuestion = newQuestion.split('User question: ')[1].trim();
-            } 
+            // if (regen) {
+            //     newQuestion = newQuestion.split('User question: ')[1].trim();
+            // } 
             
-            const ragResult = await queryAiRag(newQuestion);
-                                    
-            const newQuestionPlusRag = '\n' +
+            const ragData = await queryAiRag(newQuestion);
+
+            userSystemPrompt = userSystemPrompt + '\n' +
                 '## The bellow part enclosed in @@@ has been retirved from a RAG system use it only if you need it\n' +
                 '@@@\n' + 
-                ragResult +
-                '\n@@@\n\n' + 
-                'User question: ' + newQuestion;                                            
-                          
+                ragData +
+                '\n@@@'
+                                      
+            
 
-            this.addMessage(accountId, { role: 'user', content: newQuestionPlusRag }, jwtToken);
+            this.addMessage( accountId, { role: 'user', content: newQuestion }, jwtToken ,ragData );
 
             
             if (this.llmSecurity) {
@@ -158,7 +177,14 @@ class ConversationManager {
         
         this.log.info(`Sending request to LLM API for account ${accountId}`);
         const llmResponse = await axios.post(`http://${this.llmApiHost}/api/chat`, dataForLlm);
-        const responseMessage = llmResponse.data.message;
+        const responseMessage = llmResponse.data.message;        
+        // This part verify that the AI Gateway has not failed the request.
+        if (llmResponse.status == 422) {
+            this.log.info(`AIGW security check failed ${JSON.stringify(responseMessage)}`);
+            return ({ status: 'success', reply: 'Security check failed.', reason: responseMessage });
+        }
+
+        
 
         if (responseMessage.tool_calls) {
             this.log.info(`Function call(s) detected for account ${accountId} tool calls ${JSON.stringify(responseMessage.tool_calls)}`);
