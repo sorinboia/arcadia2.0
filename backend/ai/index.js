@@ -161,8 +161,7 @@ fastify.route({
         try {
 
             const jwtToken = authorization.split(' ')[1];
-            const responseContent = await conversationManager.processMessage(accountId, newQuestion, undefined , jwtToken);
-            fastify.log.info(`------> ${JSON.stringify(responseContent)}`);
+            const responseContent = await conversationManager.processMessage(accountId, newQuestion, undefined , jwtToken);            
 
             return responseContent;
         } catch (error) {
