@@ -89,8 +89,10 @@ class User {
         return result.data;
     }
 
-    async regenerateLastResponse() {
-        const result = await this.axios.post('/v1/ai/chat/regen');
+    // Update signature to accept { useTools }
+    async regenerateLastResponse({ useTools }) {
+        // Include useTools in the POST body
+        const result = await this.axios.post('/v1/ai/chat/regen', { useTools });
         return result.data;
     }
       

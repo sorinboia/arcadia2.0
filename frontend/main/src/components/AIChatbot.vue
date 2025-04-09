@@ -102,7 +102,8 @@ export default {
       currentWaitingMessageIndex: 0,
       waitingMessageInterval: null,
       responseTime: 0,
-      responseTimeInterval: null
+      responseTimeInterval: null,
+      useTools: false
     }
   },
   computed: {
@@ -129,7 +130,8 @@ export default {
       this.setWaitingState();
 
       try {
-        await this.$store.dispatch('aiChat/regenerateLastResponse');
+        // Pass useTools in the payload object
+        await this.$store.dispatch('aiChat/regenerateLastResponse', { useTools: this.useTools });
         this.playNotificationSound();
       } catch (error) {
         console.error('Error regenerating response:', error);
@@ -173,7 +175,8 @@ export default {
       this.setWaitingState();
 
       try {
-        await this.sendMessage(sentMessage);
+        // Pass useTools in the payload object
+        await this.sendMessage({ newMessage: sentMessage, useTools: this.useTools });
         this.playNotificationSound();
       } catch (error) {
         console.error('Error in sending message:', error);
@@ -327,7 +330,9 @@ export default {
 }
 
 .ai-chatbot-body {
-  height: calc(100% - 50px);
+  /* Original height: calc(100% - 50px); */
+  /* Adjust based on header (40px) + options (approx 35px) */
+  height: calc(100% - 75px);
   display: flex;
   flex-direction: column;
 }
@@ -520,3 +525,20 @@ export default {
 
 </style>
 
+/* Add these styles at the end of the <style scoped> block */
+.ai-chatbot-options {
+  padding: 8px 10px;
+  background-color: #f8f9fa; /* Light background */
+  border-bottom: 1px solid #e0e0e0; /* Separator line */
+  font-size: 0.9em;
+}
+
+.ai-chatbot-options label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.ai-chatbot-options input[type="checkbox"] {
+  margin-right: 5px;
+}
