@@ -531,9 +531,6 @@ export default {
   opacity: 1;
 }
 
-</style>
-
-/* Add these styles at the end of the <style scoped> block */
 .ai-chatbot-options {
   padding: 8px 10px;
   background-color: #f8f9fa; /* Light background */
@@ -550,3 +547,4 @@ export default {
 .ai-chatbot-options input[type="checkbox"] {
   margin-right: 5px;
 }
+</style>
