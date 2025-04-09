@@ -79,8 +79,10 @@ class User {
         return result.data;
     }
 
-    async aiChat({newQuestion}) {        
-        const result = await this.axios.post('/v1/ai/chat',{ newQuestion});
+    // Update signature to accept { newQuestion, useTools }
+    async aiChat({newQuestion, useTools}) {
+        // Include useTools in the POST body
+        const result = await this.axios.post('/v1/ai/chat',{ newQuestion, useTools });
         return result.data;
     }
 

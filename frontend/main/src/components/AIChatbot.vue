@@ -20,6 +20,14 @@
           <button class="ai-chatbot-toggle" @click.stop="toggleChat">{{ isOpen ? '−' : '+' }}</button>
         </div>
       </div>
+      </div>
+      <!-- Add this block below the header -->
+      <div v-if="isOpen" class="ai-chatbot-options">
+        <label>
+          <input type="checkbox" v-model="useTools"> Use Tools
+        </label>
+      </div>
+      <!-- End of added block -->
       <div v-if="isOpen" class="ai-chatbot-body">
         <div class="ai-chatbot-messages" ref="messageContainer">
           <div v-for="(message, index) in conversation" :key="index" :class="['message', message.sender]">

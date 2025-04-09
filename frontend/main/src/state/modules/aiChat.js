@@ -24,10 +24,12 @@ const mutations = {
 };
 
 const actions = {
-  async sendMessage({ commit }, newMessage) {
-    commit('ADD_MESSAGE', { sender: 'user', text: newMessage });    
-    try {          
-      const response = await user.aiChat({ newQuestion: newMessage });
+  // Update signature to accept { newMessage, useTools }
+  async sendMessage({ commit }, { newMessage, useTools }) {
+    commit('ADD_MESSAGE', { sender: 'user', text: newMessage });
+    try {
+      // Pass useTools to the API call
+      const response = await user.aiChat({ newQuestion: newMessage, useTools });
       
       const botReply = { sender: 'bot', text: response.reply };
       commit('ADD_MESSAGE', botReply);
@@ -39,24 +41,29 @@ const actions = {
       throw error;
     }
   },
-  async regenerateLastResponse({ commit, state }) {
+  // Update signature to accept { useTools }
+  async regenerateLastResponse({ commit, state }, { useTools }) {
     if (state.conversation.length < 2) return;
 
     commit('REMOVE_LAST_BOT_MESSAGE');
-    const lastUserMessage = state.conversation[state.conversation.length - 1].text;
+    // No need to get last user message text here, backend handles it
 
     try {
-      const response = await user.regenerateLastResponse();
+      // Pass useTools to the API call
+      const response = await user.regenerateLastResponse({ useTools });
       if (response.status === 'success') {
         const botReply = { sender: 'bot', text: response.reply };
         commit('ADD_MESSAGE', botReply);
         return botReply;
+      } else {
+         // Handle potential errors from regeneration reported by the backend
+         console.error('Error regenerating response:', response.message || 'Unknown error');
+         commit('ADD_MESSAGE', { sender: 'bot', text: `Sorry, I couldn't regenerate the response. ${response.message || ''}` });
       }
     } catch (error) {
-      console.error('Error regenerating response:', error);
-      const errorMessage = { sender: 'bot', text: 'Sorry, I encountered an error while regenerating the response. Please try again.' };
-      commit('ADD_MESSAGE', errorMessage);
-      throw error;
+      console.error('Error regenerating last response:', error);
+      commit('ADD_MESSAGE', { sender: 'bot', text: 'Sorry, I encountered an error while regenerating.' });
+      throw error; // Re-throw if needed elsewhere
     }
   },
   async restartChat({ commit }) {
