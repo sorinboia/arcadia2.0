@@ -20,7 +20,6 @@
           <button class="ai-chatbot-toggle" @click.stop="toggleChat">{{ isOpen ? '−' : '+' }}</button>
         </div>
       </div>
-      </div>
       <!-- Add this block below the header -->
       <div v-if="isOpen" class="ai-chatbot-options">
         <label>
@@ -72,7 +71,7 @@
       <source src="@/assets/sounds/notification.wav" type="audio/mpeg">
     </audio>
     </div>
-  
+    </div> <!-- This is the moved closing tag for the main ai-chatbot div -->
 </template>
 
 
