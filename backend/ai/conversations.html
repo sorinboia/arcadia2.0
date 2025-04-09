@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .conversations-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .conversation {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .conversation:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .conversation h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            background-color: #f3f4f6;
+            word-wrap: break-word; /* Breaks long words and wraps them */
+            overflow-wrap: break-word; /* Alternative to word-wrap */
+        }
+
+        .message:last-child {
+            margin-bottom: 0;
+        }
+
+        .message .role {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .message .content {
+            color: #4b5563;
+        }
+
+        .message.system {
+            background-color: #e0f2fe;
+        }
+
+        .message.user {
+            background-color: #d1fae5;
+        }
+
+        .message.assistant {
+            background-color: #fef3c7;
+        }
+
+        .message.tool {
+            background-color: #ede9fe;
+        }
+
+        .refresh-notice {
+            text-align: center;
+            color: #6b7280;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            padding: 0.75rem;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1f2937;
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            width: 100%;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .collapsible:hover {
+            background-color: #e5e7eb;
+        }
+
+        .collapsible::after {
+            content: "▼";
+            font-size: 0.8rem;
+            transition: transform 0.2s ease;
+        }
+
+        .collapsible.active::after {
+            transform: rotate(180deg);
+        }
+
+        .content {
+            display: none; /* Ensure content is hidden initially */
+            padding: 0.75rem;
+            background-color: #ffffff;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .content.show {
+            display: block;
+        }
+
+        .tool-box {
+            display: none; /* Ensure tool-box is hidden initially */
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+
+        .tool-box.show {
+            display: block;
+        }
+
+        .tool-box h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .tool-box p {
+            margin: 0;
+            color: #4b5563;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .controls button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #ffffff;
+            background-color: #3b82f6;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0 0.5rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .controls button:hover {
+            background-color: #2563eb;
+        }
+
+        .message-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .message-container .content,
+        .message-container .tool-box {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Conversations</h1>
+    <div class="controls">
+        <button id="refreshButton">Refresh Conversations</button>
+        <button id="toggleAllButton">Expand/Collapse All</button>
+    </div>
+    <div class="conversations-container" id="conversations"></div>
+    <script>
+        async function fetchConversations() {
+            try {
+                const response = await fetch('/v1/ai/chat/conversations');
+                const data = await response.json();
+                const conversationsDiv = document.getElementById('conversations');
+                conversationsDiv.innerHTML = '';
+
+                console.log('Fetched conversations:', data); // Debugging log
+
+                for (const [accountId, messages] of Object.entries(data)) {
+                    const conversationDiv = document.createElement('div');
+                    conversationDiv.className = 'conversation';
+                    conversationDiv.innerHTML = `<h2>Account ID: ${accountId}</h2>`;
+
+                    messages.forEach(message => {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = `message ${message.role}`;
+
+                        const collapsibleButton = document.createElement('button');
+                        collapsibleButton.className = 'collapsible';
+                        collapsibleButton.innerHTML = `${message.role}`;
+
+                        const messageContainer = document.createElement('div');
+                        messageContainer.className = 'message-container';
+
+                        // Main content
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'content';
+                        contentDiv.innerHTML = marked.parse(message.content || ''); // Render Markdown as HTML
+                        messageContainer.appendChild(contentDiv);
+
+                        // Tool calls
+                        if (message.tool_calls && Array.isArray(message.tool_calls)) {
+                            const toolBox = document.createElement('div');
+                            toolBox.className = 'tool-box';
+                            toolBox.innerHTML = '<h3>Tool Calls</h3>';
+
+                            message.tool_calls.forEach(toolCall => {
+                                if (toolCall.name && toolCall.arguments) {
+                                    const toolCallDiv = document.createElement('div');
+                                    toolCallDiv.innerHTML = `
+                                        <p><strong>Function:</strong> ${toolCall.name}</p>
+                                        <p><strong>Arguments:</strong> ${JSON.stringify(toolCall.arguments, null, 2)}</p>
+                                    `;
+                                    toolBox.appendChild(toolCallDiv);
+                                }
+                            });
+
+                            messageContainer.appendChild(toolBox);
+                        }
+
+                        // Tool call ID
+                        if (message.tool_call_id) {
+                            const toolCallIdBox = document.createElement('div');
+                            toolCallIdBox.className = 'tool-box';
+                            toolCallIdBox.innerHTML = `
+                                <h3>Tool Call ID</h3>
+                                <p>${message.tool_call_id}</p>
+                            `;
+                            messageContainer.appendChild(toolCallIdBox);
+                        }
+
+                        console.log('Message content:', message.content); // Debugging log
+
+                        collapsibleButton.addEventListener('click', () => {
+                            collapsibleButton.classList.toggle('active');
+                            const contentDiv = messageContainer.querySelector('.content');
+                            const toolBoxes = messageContainer.querySelectorAll('.tool-box');
+                            
+                            if (contentDiv) {
+                                contentDiv.classList.toggle('show');
+                            }
+                            toolBoxes.forEach(toolBox => {
+                                toolBox.classList.toggle('show');
+                            });
+                        });
+
+                        messageDiv.appendChild(collapsibleButton);
+                        messageDiv.appendChild(messageContainer);
+                        conversationDiv.appendChild(messageDiv);
+                    });
+
+                    conversationsDiv.appendChild(conversationDiv);
+                }
+            } catch (error) {
+                console.error('Error fetching conversations:', error);
+            }
+        }
+
+        // Refresh button functionality
+        document.getElementById('refreshButton').addEventListener('click', () => {
+            fetchConversations();
+        });
+
+        // Expand/Collapse All button functionality
+        document.getElementById('toggleAllButton').addEventListener('click', () => {
+            const collapsibles = document.querySelectorAll('.collapsible');
+            const isExpanded = collapsibles[0]?.classList.contains('active');
+
+            collapsibles.forEach(collapsible => {
+                const messageContainer = collapsible.nextElementSibling;
+                const contentDiv = messageContainer.querySelector('.content');
+                const toolBoxes = messageContainer.querySelectorAll('.tool-box');
+
+                if (isExpanded) {
+                    collapsible.classList.remove('active');
+                    if (contentDiv) contentDiv.classList.remove('show');
+                    toolBoxes.forEach(toolBox => toolBox.classList.remove('show'));
+                } else {
+                    collapsible.classList.add('active');
+                    if (contentDiv) contentDiv.classList.add('show');
+                    toolBoxes.forEach(toolBox => toolBox.classList.add('show'));
+                }
+            });
+
+            // Update button text
+            const toggleAllButton = document.getElementById('toggleAllButton');
+            toggleAllButton.textContent = isExpanded ? 'Expand All' : 'Collapse All';
+        });
+
+        // Initial fetch
+        fetchConversations();
+    </script>
+</body>
+</html>

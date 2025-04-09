@@ -15,7 +15,11 @@ db="localhost"
 llmSecurityHost="bypass"
 llmSecurityHost="prompt-security.workshop.emea.f5se.com"
 llmSecurityAppId="f4977782-d3ce-4530-bc66-8801d9c377bc"
-llmModel="llama3.1:8B"
+#llmModel="llama3.1:8b"
+llmModel="llama3.2:3b"
+#llmModel="MFDoom/deepseek-r1-tool-calling:8b"
+
+#llmModel="granite3-dense:8b"
 
 args_command="--aiRag=$aiRag --db=$db --llmModel=$llmModel --llmSecurityHost=$llmSecurityHost --llmSecurityAppId=$llmSecurityAppId --llmApiHost=$llmHost --aiApiHost=$aiHost --usersApiHost=$usersHost --loginApiHost=$loginHost --cashtApiHost=$cashtsHost --stocktApiHost=$stocktHost --stocksApiHost=$stocksHost"
 

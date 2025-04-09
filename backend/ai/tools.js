@@ -37,7 +37,7 @@ const tools = [
   },
   {
     name: 'get_user_data',
-    description: 'Get user data, how much money, LTC, BTC and ETH they have in their portfolio.',
+    description: 'Get user information like: how much money, LTC, BTC and ETH they have in their portfolio, their name and email. Should only be used when user is asking about their own data',
     parameters: {
       type: 'object',
       properties: {
