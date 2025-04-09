@@ -169,11 +169,15 @@ class ConversationManager {
             
         
                     
-        const dataForLlm = {
-            model: this.llmModel,            
+        const dataForLlm = {          
             messages: this.getConversation(accountId),
             stream: false,
         };
+
+        // Conditionally add the model property if it's not 'none' or empty
+        if (this.llmModel && this.llmModel.toLowerCase() !== 'none' && this.llmModel !== '') {
+            dataForLlm.model = this.llmModel;
+        }
 
         if (useTools) {
             dataForLlm.tools = tools.map(({ name, description, parameters }) => ({ name, description, parameters }));
