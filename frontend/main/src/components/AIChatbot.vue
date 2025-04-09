@@ -369,7 +369,8 @@ export default {
 
 .ai-chatbot-input {
   display: flex;
-  padding: 10px;
+  /* Add more padding at the bottom to lift the input elements */
+  padding: 10px 10px 20px 10px;
 }
 
 .ai-chatbot-input input {
