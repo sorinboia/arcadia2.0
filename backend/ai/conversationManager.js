@@ -65,6 +65,11 @@ class ConversationManager {
         }
     }
 
+    getAllConversations() {
+        this.log.info('Retrieving all conversations');
+        return Object.fromEntries(this.conversations);
+    }
+
     getConversation(accountId) {
         if (!this.conversations.has(accountId)) {
             this.conversations.set(accountId, []);
@@ -79,16 +84,14 @@ class ConversationManager {
         const userSystemPrompt = this.systemPrompt + '\n' +
             '## User info and API Keys\n' +
             'User Account ID:'+ accountId + '\n' +
-            'JWT Token Base64 format:'+ jwtToken + '\n\n' +
-            '## The bellow part enclosed in @@@ has been retirved from a RAG system use it only if you need it\n' +
-            '@@@\n' + 
-            ragData +
-            '\n@@@'
+            'JWT Token Base64 format:'+ jwtToken + '\n\n' 
+            
 
         if (conversation.length === 0) {                                    
             conversation.push({role:'system', content: userSystemPrompt});
             this.log.info(`System prompt added for account ${accountId}`);
-        } else if ( message.role != 'tool') {
+        } 
+        if ( ragData) {
             conversation[0] = {
                 role:'system',
                 content: userSystemPrompt + '\n' +
@@ -177,7 +180,7 @@ class ConversationManager {
         
         this.log.info(`Sending request to LLM API for account ${accountId}`);
         const llmResponse = await axios.post(`http://${this.llmApiHost}/api/chat`, dataForLlm);
-        const responseMessage = llmResponse.data.message;        
+        const responseMessage = llmResponse.data.message || llmResponse.data.choices[0].message;        
         // This part verify that the AI Gateway has not failed the request.
         if (llmResponse.status == 422) {
             this.log.info(`AIGW security check failed ${JSON.stringify(responseMessage)}`);
@@ -192,10 +195,16 @@ class ConversationManager {
                 
                 const tool = tools.find(t => t.name === toolCall.function.name);
 
+                this.addMessage(accountId, {
+                    role: 'assistant',
+                    content: '',
+                    tool_calls: [ toolCall.function ]
+                });
                 
                 
                 if (tool) {
                     this.log.info(`Executing function ${toolCall.function.name} for account ${accountId}`);
+                                        
                     const result = await tool.function(toolCall.function.arguments);
                     this.log.info(`Function response ${toolCall.function.name} is ${JSON.stringify(result)}`);
                     this.addMessage(accountId, {

@@ -3,6 +3,9 @@ const argv = require('yargs').argv;
 const fastify = require('fastify')({ logger: true });
 const axios = require('axios');
 const fp = require("fastify-plugin");
+const path = require('path');
+const fs = require('fs');
+
 
 const ConversationManager = require('./conversationManager');
 
@@ -73,6 +76,26 @@ fastify.route({
     url: '/healthz',
     handler: (request,reply) => {
         return 'Ok';
+    }
+});
+
+
+fastify.route({
+    method: 'GET',
+    url: `/${API_VERSION}/ai/conversations`,
+    handler: async (request, reply) => {
+        const filePath = path.join(__dirname, 'conversations.html');
+        const htmlContent = fs.readFileSync(filePath, 'utf8');
+        reply.type('text/html').send(htmlContent);
+    }
+});
+
+fastify.route({
+    method: 'GET',
+    url: `/${API_VERSION}/ai/chat/conversations`,
+    handler: async (request, reply) => {
+        const conversations = conversationManager.getAllConversations();
+        return conversations;
     }
 });
 
