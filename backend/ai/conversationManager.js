@@ -117,7 +117,7 @@ class ConversationManager {
         return Object.fromEntries(this.conversations);
     }
 
-    async processMessage(accountId, newQuestion, depth = 0, jwtToken, regen = false) {
+    async processMessage(accountId, newQuestion, depth = 0, jwtToken, regen = false, useTools = false) {
         
         let userSystemPrompt = this.systemPrompt + '\n' +
            '## User info and API Keys\n' +
@@ -173,8 +173,14 @@ class ConversationManager {
             model: this.llmModel,            
             messages: this.getConversation(accountId),
             stream: false,
-            tools: tools.map(({ name, description, parameters }) => ({ name, description, parameters }))
         };
+
+        if (useTools) {
+            dataForLlm.tools = tools.map(({ name, description, parameters }) => ({ name, description, parameters }));
+            this.log.info(`Tools included in LLM request for account ${accountId}`);
+        } else {
+            this.log.info(`Tools NOT included in LLM request for account ${accountId}`);
+        }
         
         
         
@@ -189,7 +195,7 @@ class ConversationManager {
 
         
 
-        if (responseMessage.tool_calls) {
+        if (useTools && responseMessage.tool_calls) {
             this.log.info(`Function call(s) detected for account ${accountId} tool calls ${JSON.stringify(responseMessage.tool_calls)}`);
             for (const toolCall of responseMessage.tool_calls) {
                 
@@ -224,7 +230,7 @@ class ConversationManager {
             }
 
             this.log.info(`Recursively calling processMessage for account ${accountId}`);
-            return this.processMessage(accountId, "", depth + 1);
+            return this.processMessage(accountId, "", depth + 1, jwtToken, false, useTools);
         } else {
 
             if (this.llmSecurity) {
@@ -248,7 +254,7 @@ class ConversationManager {
         }
     }
 
-    async regenerateLastResponse(accountId, jwtToken) {
+    async regenerateLastResponse(accountId, jwtToken, useTools = false) {
         const conversation = this.getConversation(accountId);
         
         if (conversation.length < 2) {
@@ -269,7 +275,7 @@ class ConversationManager {
         const lastUserMessage = conversation[conversation.length - 1].content;
         conversation.pop();
         // Process the message again
-        return this.processMessage(accountId, lastUserMessage, 0, jwtToken, true);
+        return this.processMessage(accountId, lastUserMessage, 0, jwtToken, true, useTools);
     }
     
       

@@ -179,12 +179,12 @@ fastify.route({
             accountId = request.user.sub;
         }
         
-        const { newQuestion } = request.body;
+        const { newQuestion, useTools = false } = request.body;
         
         try {
 
             const jwtToken = authorization.split(' ')[1];
-            const responseContent = await conversationManager.processMessage(accountId, newQuestion, undefined , jwtToken);            
+            const responseContent = await conversationManager.processMessage(accountId, newQuestion, 0, jwtToken, false, useTools);            
 
             return responseContent;
         } catch (error) {
