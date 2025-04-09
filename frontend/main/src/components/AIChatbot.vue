@@ -72,7 +72,7 @@
       <source src="@/assets/sounds/notification.wav" type="audio/mpeg">
     </audio>
     </div>
-  </div>
+  
 </template>
 
 
