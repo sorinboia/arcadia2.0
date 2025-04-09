@@ -146,9 +146,12 @@ fastify.route({
         accountId = request.user.sub;
       }
   
+      // Extract useTools from the body for regeneration, default to false
+      const { useTools = false } = request.body || {};
+      
       try {
         const jwtToken = authorization.split(' ')[1];
-        const responseContent = await conversationManager.regenerateLastResponse(accountId, jwtToken);
+        const responseContent = await conversationManager.regenerateLastResponse(accountId, jwtToken, useTools);
             
         return responseContent;
       } catch (error) {
