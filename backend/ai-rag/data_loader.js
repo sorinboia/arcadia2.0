@@ -82,7 +82,7 @@ export async function addFileToCollection(filePath, collection) {
 
 export async function addFilesToCollection(folderPath, collection) {
   const files = fs.readdirSync(folderPath);
-  
+  console.log(files);
   for (const file of files) {
     const filePath = path.join(folderPath, file);
     await addFileToCollection(filePath, collection);

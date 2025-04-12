@@ -84,7 +84,7 @@ app.post('/v1/ai-rag/chat', async (req, res) => {
   res.send(dbres.documents);
 });
 
-async function getOrCreateCollection(name) {
+async function getOrCreateCollection(name) {  
   const collection = await client.getOrCreateCollection({
     name,
     metadata: {
@@ -105,8 +105,10 @@ async function queryCollection(collection, nResults, queryTexts) {
 }
 
 async function fillDB(retryCount = 5, delay = 5000) {
+  console.log('FILLING DB');
   try {
-    const collection = await getOrCreateCollection("News");
+    
+    const collection = await getOrCreateCollection("News");    
     await addFilesToCollection(docsFolder, collection);
     console.log("Documents ingested successfully!");
   } catch (error) {

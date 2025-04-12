@@ -9,7 +9,7 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install ChromaDB in the virtual environment
-RUN pip3 install chromadb
+RUN pip3 install chromadb==0.5.23
 
 WORKDIR /usr/src/app
 
