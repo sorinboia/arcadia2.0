@@ -45,6 +45,20 @@ async function queryAiRag(query) {
   }
 
 
+/**
+ * Strip out any &lt;think&gt;...&lt;/think&gt; blocks from the given text.
+ * Ensures internal reasoning is never saved or exposed.
+ * @param {string} text
+ * @returns {string}
+ */
+function removeThinkTags(text) {
+    if (!text || typeof text !== 'string') {
+        return text;
+    }
+    // Non-greedy, multi-line, case-insensitive replace
+    // Matches <think> ... </think> including line breaks and removes them
+    return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+}
 class ConversationManager {
     constructor({ llmApiHost, llmModel, fastify }) {
         this.systemPrompt = systemPrompt;
@@ -252,8 +266,9 @@ class ConversationManager {
             }
 
             this.log.info(`Adding assistant response for account ${accountId}`);
-            this.addMessage(accountId, { role: 'assistant', content: responseMessage.content });
-            return ({ status: 'success', reply: responseMessage.content });
+            const cleanContent = removeThinkTags(responseMessage.content);
+            this.addMessage(accountId, { role: 'assistant', content: cleanContent });
+            return ({ status: 'success', reply: cleanContent });
             
         }
     }
