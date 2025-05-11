@@ -99,6 +99,15 @@ class User {
     }
       
         
+async startAiChatAsync({ newMessage, useTools }) {
+        const result = await this.axios.post('/v1/ai/chat/async', { newQuestion: newMessage, useTools });
+        return result.data.requestId;
+    }
+
+    async getAiChatStatus(requestId) {
+        const result = await this.axios.get(`/v1/ai/chat/async/${requestId}`);
+        return result.data;
+    }
 }
 
 

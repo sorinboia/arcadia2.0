@@ -5,6 +5,8 @@ const axios = require('axios');
 const fp = require("fastify-plugin");
 const path = require('path');
 const fs = require('fs');
+const { randomUUID } = require('crypto');
+const asyncChatTasks = new Map();
 
 
 const ConversationManager = require('./conversationManager');
@@ -194,6 +196,64 @@ fastify.route({
             fastify.log.error(`Error processing message: ${error}` );
             return reply.code(500).send({ status: 'error', message: 'An error occurred while processing your request' });
         }
+    }
+});
+ 
+// Async AI chat endpoints
+fastify.route({
+    method: 'POST',
+    url: `/${API_VERSION}/ai/chat/async`,
+    preValidation: [fastify.authenticate],
+    handler: async (request, reply) => {
+        const authorization = request.headers.authorization;
+        let accountId;
+        if (request.headers['okta-user']) {
+            accountId = (await axios.get(`http://${usersApiHost}/v1/user/email/${request.user.sub}`, {
+                headers: {
+                    authorization,
+                    ...openTracingHeaders(request.headers)
+                }
+            })).data.accountId;
+        } else {
+            accountId = request.user.sub;
+        }
+        const { newQuestion, useTools = false } = request.body;
+        const requestId = randomUUID();
+        asyncChatTasks.set(requestId, { status: 'processing' });
+        // Fire and forget processing
+        conversationManager.processMessage(accountId, newQuestion, 0, authorization.split(' ')[1], false, useTools)
+            .then(result => {
+                if (result.status === 'success') {
+                    asyncChatTasks.set(requestId, { status: 'completed', reply: result.reply });
+                } else {
+                    asyncChatTasks.set(requestId, { status: 'error' });
+                }
+            })
+            .catch(error => {
+                fastify.log.error(`Async chat error for request ${requestId}: ${error}`);
+                asyncChatTasks.set(requestId, { status: 'error' });
+            });
+        return reply.send({ status: 'accepted', requestId });
+    }
+});
+
+fastify.route({
+    method: 'GET',
+    url: `/${API_VERSION}/ai/chat/async/:requestId`,
+    preValidation: [fastify.authenticate],
+    handler: async (request, reply) => {
+        const { requestId } = request.params;
+        if (!asyncChatTasks.has(requestId)) {
+            return reply.code(404).send({ status: 'error', message: 'Request not found' });
+        }
+        const task = asyncChatTasks.get(requestId);
+        if (task.status === 'completed') {
+            return { status: 'completed', reply: task.reply };
+        }
+        if (task.status === 'error') {
+            return { status: 'error' };
+        }
+        return { status: 'processing' };
     }
 });
 

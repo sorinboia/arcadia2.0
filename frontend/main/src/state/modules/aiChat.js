@@ -28,12 +28,23 @@ const actions = {
   async sendMessage({ commit }, { newMessage, useTools }) {
     commit('ADD_MESSAGE', { sender: 'user', text: newMessage });
     try {
-      // Pass useTools to the API call
-      const response = await user.aiChat({ newQuestion: newMessage, useTools });
-      
-      const botReply = { sender: 'bot', text: response.reply };
-      commit('ADD_MESSAGE', botReply);
-      return botReply;
+      const requestId = await user.startAiChatAsync({ newMessage, useTools });
+      let status, reply;
+      do {
+        await new Promise(res => setTimeout(res, 1000));
+        const result = await user.getAiChatStatus(requestId);
+        status = result.status;
+        reply = result.reply;
+      } while (status === 'processing');
+      if (status === 'completed') {
+        const botReply = { sender: 'bot', text: reply };
+        commit('ADD_MESSAGE', botReply);
+        return botReply;
+      } else {
+        const errorMessage = { sender: 'bot', text: 'Sorry, I encountered an error processing your request.' };
+        commit('ADD_MESSAGE', errorMessage);
+        throw new Error('AI chat error status');
+      }
     } catch (error) {
       console.error('Error sending message to AI:', error);
       const errorMessage = { sender: 'bot', text: 'Sorry, I encountered an error. Please try again.' };
