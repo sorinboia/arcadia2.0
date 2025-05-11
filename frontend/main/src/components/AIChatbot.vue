@@ -95,8 +95,11 @@ export default {
       isResizing: false,
       chatTop: window.innerHeight - 420,
       chatLeft: window.innerWidth - 320,
+      chatClosedWidth: 300,
+      chatOpenWidth: 600,
       chatWidth: 300,
       chatHeight: 400,
+      headerHeight: 50,
       startX: 0,
       startY: 0,
       startTop: 0,
@@ -172,8 +175,16 @@ export default {
       event.stopPropagation();
       this.isOpen = !this.isOpen;
       if (this.isOpen) {
+        // Expand width when open
+        this.chatWidth = this.chatOpenWidth;
+        // Ensure the chatbot stays within screen after width change
+        this.chatLeft = Math.min(this.chatLeft, window.innerWidth - this.chatWidth);
         this.$nextTick(this.scrollToBottom);
+      } else {
+        // Revert to closed width when closed
+        this.chatWidth = this.chatClosedWidth;
       }
+      this.ensureChatInViewport();
     },
     async handleSendMessage() {
       if (this.userInput.trim() === '' || this.isWaiting) return;
@@ -264,8 +275,11 @@ export default {
       const deltaX = clientX - this.startX;
       const deltaY = clientY - this.startY;
 
-      this.chatLeft = Math.max(0, Math.min(window.innerWidth - this.chatWidth, this.startLeft + deltaX));
-      this.chatTop = Math.max(0, Math.min(window.innerHeight - this.chatHeight, this.startTop + deltaY));
+      const effectiveWidth = this.chatWidth;
+      const effectiveHeight = this.isOpen ? this.chatHeight : this.headerHeight;
+
+      this.chatLeft = Math.max(0, Math.min(window.innerWidth - effectiveWidth, this.startLeft + deltaX));
+      this.chatTop = Math.max(0, Math.min(window.innerHeight - effectiveHeight, this.startTop + deltaY));
     },
     onResizing(event) {
       const clientX = event.clientX || event.touches[0].clientX;
@@ -280,14 +294,25 @@ export default {
       // Ensure the chatbot doesn't resize beyond the window boundaries
       this.chatWidth = Math.min(newWidth, window.innerWidth - this.startLeft);
       this.chatHeight = Math.min(newHeight, window.innerHeight - this.startTop);
+
+      this.ensureChatInViewport();
     },
     onMouseUp() {
       this.isDragging = false;
       this.isResizing = false;
+      this.ensureChatInViewport();
     },
     onTouchEnd() {
       this.isDragging = false;
       this.isResizing = false;
+      this.ensureChatInViewport();
+    },
+    ensureChatInViewport() {
+      const effectiveWidth = this.chatWidth;
+      const effectiveHeight = this.isOpen ? this.chatHeight : this.headerHeight;
+
+      this.chatLeft = Math.max(0, Math.min(window.innerWidth - effectiveWidth, this.chatLeft));
+      this.chatTop = Math.max(0, Math.min(window.innerHeight - effectiveHeight, this.chatTop));
     },
     initChat() {
       this.handleRestartChat();
@@ -307,7 +332,7 @@ export default {
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  z-index: 1000;
+  z-index: 9999; /* Ensure always on top */
   transition: width 0.1s ease, height 0.1s ease;
 }
 
