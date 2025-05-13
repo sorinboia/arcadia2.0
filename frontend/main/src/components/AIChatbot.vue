@@ -1,77 +1,93 @@
 <template>
   <div>
-    <div 
+    <div
       v-if="isChatbotAvailable"
-      class="ai-chatbot" 
-      :class="{ 'ai-chatbot-open': isOpen }"
-      :style="{ 
-        top: chatTop + 'px', 
-        left: chatLeft + 'px', 
-        width: chatWidth + 'px', 
-        height: isOpen ? chatHeight + 'px' : 'auto' 
+      class="ai-chatbot"
+      :class="{
+        'ai-chatbot-open': isOpen,
+        'ai-chatbot-collapsed': !isOpen
+      }"
+      :style="{
+        top: chatTop + 'px',
+        left: chatLeft + 'px',
+        width: chatWidth + 'px',
+        height: isOpen ? chatHeight + 'px' : 'auto'
       }"
     >
-      <div class="ai-chatbot-header" @mousedown="startDragging" @touchstart="startDragging">
-        <h3>AI Assistant</h3>
-        <div class="ai-chatbot-controls">
-          <button v-if="isOpen" @click.stop="handleRestartChat" class="restart-button" title="Restart Chat">
-            <i class="fas fa-redo"></i>
-          </button>
-          <button class="ai-chatbot-toggle" @click.stop="toggleChat">{{ isOpen ? '−' : '+' }}</button>
+      <!-- OPEN CHAT STATE -->
+      <template v-if="isOpen">
+        <div class="ai-chatbot-header" @mousedown="startDragging" @touchstart="startDragging">
+          <h3>AI Assistant</h3>
+          <div class="ai-chatbot-controls">
+            <button v-if="isOpen" @click.stop="handleRestartChat" class="restart-button" title="Restart Chat">
+              <i class="fas fa-redo"></i>
+            </button>
+            <button class="ai-chatbot-toggle" @click.stop="toggleChat">{{ isOpen ? '−' : '+' }}</button>
+          </div>
         </div>
-      </div>
-      <!-- Add this block below the header -->
-      <div v-if="isOpen" class="ai-chatbot-options">
-        <label>
-          <input type="checkbox" v-model="useTools"> Use Tools
-        </label>
-      </div>
-      <!-- End of added block -->
-      <div v-if="isOpen" class="ai-chatbot-body">
-        <div class="ai-chatbot-messages" ref="messageContainer">
-          <div v-for="(message, index) in conversation" :key="index" :class="['message', message.sender]">
-            <template v-if="message.sender === 'user'">
-              {{ message.text }}
-            </template>
-            <div v-else class="bot-message">
-              <vue-markdown class="markdown-body">{{ message.text }}</vue-markdown>
-              <button 
-                v-if="index === conversation.length - 1 && message.sender === 'bot' && index > 0" 
-                @click="handleRegenerateLastResponse" 
-                class="regenerate-button" 
-                title="Regenerate response"
-              >
-                <i class="fas fa-sync-alt"></i>
-              </button>
+        <div class="ai-chatbot-options">
+          <label>
+            <input type="checkbox" v-model="useTools"> Use Tools
+          </label>
+        </div>
+        <div class="ai-chatbot-body">
+          <div class="ai-chatbot-messages" ref="messageContainer">
+            <div v-for="(message, index) in conversation" :key="index" :class="['message', message.sender]">
+              <template v-if="message.sender === 'user'">
+                {{ message.text }}
+              </template>
+              <div v-else class="bot-message">
+                <vue-markdown class="markdown-body">{{ message.text }}</vue-markdown>
+                <button
+                  v-if="index === conversation.length - 1 && message.sender === 'bot' && index > 0"
+                  @click="handleRegenerateLastResponse"
+                  class="regenerate-button"
+                  title="Regenerate response"
+                >
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </div>
             </div>
           </div>
-
+          <div class="ai-chatbot-input">
+            <input
+              v-model="userInput"
+              @keyup.enter="handleSendMessage"
+              :placeholder="isWaiting ? waitingMessages[currentWaitingMessageIndex] : 'Type your message...'"
+              :disabled="isWaiting"
+              :readonly="isWaiting"
+            />
+            <button @click="handleSendMessage" :disabled="isWaiting">
+              {{ isWaiting ? `${responseTime}s` : 'Send' }}
+            </button>
+          </div>
         </div>
-        <div class="ai-chatbot-input">
-          <input 
-            v-model="userInput" 
-            @keyup.enter="handleSendMessage" 
-            :placeholder="isWaiting ? waitingMessages[currentWaitingMessageIndex] : 'Type your message...'" 
-            :disabled="isWaiting"
-            :readonly="isWaiting"
-          />
-          <button @click="handleSendMessage" :disabled="isWaiting">
-            {{ isWaiting ? `${responseTime}s` : 'Send' }}
-          </button>
+        <div
+          class="resize-handle"
+          :class="{ 'resizing': isResizing }"
+          @mousedown="startResizing"
+          @touchstart="startResizing"
+        ></div>
+        <audio ref="notificationSound" preload="auto">
+          <source src="@/assets/sounds/notification.wav" type="audio/mpeg">
+        </audio>
+      </template>
+      <!-- COLLAPSED CHAT STATE -->
+      <template v-else>
+        <div
+          class="ai-chatbot-collapsed-content"
+          @mousedown="startDragging"
+          @touchstart="startDragging"
+          @click.stop="handleCollapsedClick"
+        >
+          <div class="bot-avatar">
+            <span class="bot-mouth"></span>
+          </div>
+          <div class="speech-bubble">{{ greetings[currentGreetingIndex] }}</div>
         </div>
-      </div>
-      <div 
-        v-if="isOpen" 
-        class="resize-handle" 
-        :class="{ 'resizing': isResizing }"
-        @mousedown="startResizing" 
-        @touchstart="startResizing"
-      ></div>
-    <audio ref="notificationSound" preload="auto">
-      <source src="@/assets/sounds/notification.wav" type="audio/mpeg">
-    </audio>
+      </template>
     </div>
-    </div> <!-- This is the moved closing tag for the main ai-chatbot div -->
+  </div>
 </template>
 
 
@@ -95,9 +111,9 @@ export default {
       isResizing: false,
       chatTop: window.innerHeight - 420,
       chatLeft: window.innerWidth - 320,
-      chatClosedWidth: 300,
+      chatClosedWidth: 120, // Collapsed width ≈ 120px
       chatOpenWidth: 600,
-      chatWidth: 300,
+      chatWidth: 120, // Start collapsed
       chatHeight: 400,
       headerHeight: 50,
       startX: 0,
@@ -113,7 +129,11 @@ export default {
       waitingMessageInterval: null,
       responseTime: 0,
       responseTimeInterval: null,
-      useTools: false
+      useTools: false,
+      // Collapsed state greetings
+      greetings: ['Hi!', 'Need help?', 'Hello!', 'Ask me!', 'Greetings!'],
+      currentGreetingIndex: 0,
+      greetingInterval: null
     }
   },
   computed: {
@@ -125,12 +145,23 @@ export default {
     document.addEventListener('mouseup', this.onMouseUp);
     document.addEventListener('touchmove', this.onTouchMove);
     document.addEventListener('touchend', this.onTouchEnd);
+    this.startGreetingRotation();
   },
   beforeDestroy() {
     document.removeEventListener('mousemove', this.onMouseMove);
     document.removeEventListener('mouseup', this.onMouseUp);
     document.removeEventListener('touchmove', this.onTouchMove);
     document.removeEventListener('touchend', this.onTouchEnd);
+    this.clearGreetingRotation();
+  },
+  watch: {
+    isOpen(newVal) {
+      if (newVal) {
+        this.clearGreetingRotation();
+      } else {
+        this.startGreetingRotation();
+      }
+    }
   },
   methods: {
     ...mapActions('aiChat', ['sendMessage', 'restartChat', 'regenerateLastResponse']),
@@ -172,7 +203,9 @@ export default {
       }
     },
     toggleChat(event) {
-      event.stopPropagation();
+      if (event && event.stopPropagation) {
+        event.stopPropagation();
+      }
       this.isOpen = !this.isOpen;
       if (this.isOpen) {
         // Expand width when open
@@ -237,12 +270,50 @@ export default {
       }
     },
     startDragging(event) {
-      if (event.target.closest('.ai-chatbot-header')) {
+      // Allow dragging in both open and collapsed state
+      // In open state, only drag if header is grabbed
+      if (this.isOpen) {
+        if (event.target.closest('.ai-chatbot-header')) {
+          this.isDragging = true;
+          this.startX = event.clientX || event.touches[0].clientX;
+          this.startY = event.clientY || event.touches[0].clientY;
+          this.startTop = this.chatTop;
+          this.startLeft = this.chatLeft;
+        }
+      } else {
+        // Collapsed: allow drag from anywhere in collapsed content
         this.isDragging = true;
-        this.startX = event.clientX || event.touches[0].clientX;
-        this.startY = event.clientY || event.touches[0].clientY;
+        this.startX = event.clientX || (event.touches && event.touches[0].clientX);
+        this.startY = event.clientY || (event.touches && event.touches[0].clientY);
         this.startTop = this.chatTop;
         this.startLeft = this.chatLeft;
+        this.dragStartX = this.startX;
+        this.dragStartY = this.startY;
+        this.didDrag = false;
+      }
+    },
+    onDragging(event) {
+      const clientX = event.clientX || (event.touches && event.touches[0].clientX);
+      const clientY = event.clientY || (event.touches && event.touches[0].clientY);
+      const deltaX = clientX - this.startX;
+      const deltaY = clientY - this.startY;
+
+      // Drag detection for collapsed state
+      if (!this.isOpen && !this.didDrag) {
+        if (Math.abs(clientX - this.dragStartX) > 4 || Math.abs(clientY - this.dragStartY) > 4) {
+          this.didDrag = true;
+        }
+      }
+
+      const effectiveWidth = this.chatWidth;
+      const effectiveHeight = this.isOpen ? this.chatHeight : 80; // Collapsed: avatar+speech bubble height
+
+      this.chatLeft = Math.max(0, Math.min(window.innerWidth - effectiveWidth, this.startLeft + deltaX));
+      this.chatTop = Math.max(0, Math.min(window.innerHeight - effectiveHeight, this.startTop + deltaY));
+    },
+    handleCollapsedClick() {
+      if (!this.didDrag) {
+        this.toggleChat();
       }
     },
     startResizing(event) {
@@ -269,18 +340,7 @@ export default {
         this.onResizing(event);
       }
     },
-    onDragging(event) {
-      const clientX = event.clientX || event.touches[0].clientX;
-      const clientY = event.clientY || event.touches[0].clientY;
-      const deltaX = clientX - this.startX;
-      const deltaY = clientY - this.startY;
-
-      const effectiveWidth = this.chatWidth;
-      const effectiveHeight = this.isOpen ? this.chatHeight : this.headerHeight;
-
-      this.chatLeft = Math.max(0, Math.min(window.innerWidth - effectiveWidth, this.startLeft + deltaX));
-      this.chatTop = Math.max(0, Math.min(window.innerHeight - effectiveHeight, this.startTop + deltaY));
-    },
+    // REMOVE this duplicate onDragging method (already defined above)
     onResizing(event) {
       const clientX = event.clientX || event.touches[0].clientX;
       const clientY = event.clientY || event.touches[0].clientY;
@@ -309,7 +369,7 @@ export default {
     },
     ensureChatInViewport() {
       const effectiveWidth = this.chatWidth;
-      const effectiveHeight = this.isOpen ? this.chatHeight : this.headerHeight;
+      const effectiveHeight = this.isOpen ? this.chatHeight : 80; // Collapsed: avatar+speech bubble height
 
       this.chatLeft = Math.max(0, Math.min(window.innerWidth - effectiveWidth, this.chatLeft));
       this.chatTop = Math.max(0, Math.min(window.innerHeight - effectiveHeight, this.chatTop));
@@ -318,9 +378,22 @@ export default {
       this.handleRestartChat();
     },
     playNotificationSound() {
-    this.$refs.notificationSound.play();
-  }
-
+      this.$refs.notificationSound.play();
+    },
+    // GREETING ROTATION LOGIC
+    startGreetingRotation() {
+      this.clearGreetingRotation();
+      this.currentGreetingIndex = 0;
+      this.greetingInterval = setInterval(() => {
+        this.currentGreetingIndex = (this.currentGreetingIndex + 1) % this.greetings.length;
+      }, 3000);
+    },
+    clearGreetingRotation() {
+      if (this.greetingInterval) {
+        clearInterval(this.greetingInterval);
+        this.greetingInterval = null;
+      }
+    }
   }
 }
 </script>
@@ -328,16 +401,143 @@ export default {
 <style scoped>
 .ai-chatbot {
   position: fixed;
-  width: 300px;
-  background-color: #fff;
+  width: 160px;
+  background: transparent;
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  z-index: 9999; /* Ensure always on top */
+  box-shadow: none;
+  z-index: 9999;
   transition: width 0.1s ease, height 0.1s ease;
+  padding: 0;
+  overflow: visible;
 }
 
 .ai-chatbot-open {
+  width: 600px !important;
   height: 400px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.ai-chatbot-collapsed {
+  width: 160px !important;
+  min-width: 160px;
+  max-width: 160px;
+  padding: 0 !important;
+  box-shadow: none;
+  background: transparent;
+  border-radius: 16px;
+  overflow: visible;
+}
+
+.ai-chatbot-collapsed-content {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  cursor: pointer;
+  width: 160px;
+  min-height: 64px;
+  padding: 10px 0 10px 0;
+  user-select: none;
+  position: relative;
+  background: transparent;
+}
+
+.bot-avatar {
+  width: 54px;
+  height: 54px;
+  background: radial-gradient(circle at 60% 40%, #fff 8%, transparent 10%), linear-gradient(135deg, #4CAF50 60%, #43e97b 100%);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(76,175,80,0.18), 0 0 0 3px #fff;
+  margin-bottom: 0;
+  margin-left: 8px;
+  margin-right: 0;
+  margin-top: 0;
+  position: relative;
+  animation: avatar-bounce 2.2s infinite cubic-bezier(.68,-0.55,.27,1.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2.5px solid #e0f7e9;
+}
+.bot-avatar::before {
+  /* left eye */
+  content: '';
+  display: block;
+  position: absolute;
+  left: 17px;
+  top: 20px;
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0.95;
+  box-shadow: 0 0 2px #388e3c44;
+}
+.bot-avatar::after {
+  /* right eye */
+  content: '';
+  display: block;
+  position: absolute;
+  right: 17px;
+  top: 20px;
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0.95;
+  box-shadow: 0 0 2px #388e3c44;
+}
+.bot-avatar .bot-mouth {
+  position: absolute;
+  left: 50%;
+  top: 34px;
+  width: 18px;
+  height: 10px;
+  border-bottom: 2.5px solid #fff;
+  border-radius: 0 0 12px 12px;
+  transform: translateX(-50%);
+  opacity: 0.85;
+}
+
+@keyframes avatar-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+.speech-bubble {
+  position: relative;
+  background: #f1f3f4;
+  color: #333;
+  border-radius: 16px;
+  padding: 8px 16px;
+  font-size: 15px;
+  min-width: 60px;
+  max-width: 100px;
+  text-align: center;
+  margin-left: 8px;
+  margin-top: -6px;
+  margin-bottom: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  transition: background 0.2s;
+  user-select: none;
+  z-index: 2;
+}
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 16px;
+  border-width: 8px 12px 8px 0;
+  border-style: solid;
+  border-color: transparent #f1f3f4 transparent transparent;
+  display: block;
+  width: 0;
+  height: 0;
 }
 
 .ai-chatbot-header {
